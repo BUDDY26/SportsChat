@@ -19,44 +19,52 @@ app.use(session({
     cookie: { secure: false }
 }));
 
-// MySQL Database Connection
-const db = mysql.createConnection({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'SportsChatDB'
-});
+// ========================== Temporarily Skipping Database Connection ==========================
+// console.log('Skipping database connection for now');
+// MySQL Database Connection 
+//const db = mysql.createConnection({
+    //host: process.env.DB_HOST || 'localhost',
+    //user: process.env.DB_USER || 'root',
+    //password: process.env.DB_PASSWORD || '',
+    //database: process.env.DB_NAME || 'SportsChatDB'
+//});
 
-db.connect(err => {
-    if (err) {
-        console.error('Database connection failed:', err);
-        return;
-    }
-    console.log('Connected to MySQL database');
-});
+//db.connect(err => {
+    //if (err) {
+        //console.error('Database connection failed:', err);
+        //return;
+    //}
+    //console.log('Connected to MySQL database');
+//});
 
 // User Login Route
+// User Login Route (Temporarily Mocked)
 app.post('/login', (req, res) => {
-    const { username, password } = req.body;
-    
-    db.query('SELECT * FROM Users WHERE Username = ?', [username], async (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        
-        if (results.length === 0) {
-            return res.status(401).json({ message: 'User not found' });
-        }
-        
-        const user = results[0];
-        const match = await bcrypt.compare(password, user.PasswordHash);
-        
-        if (!match) {
-            return res.status(401).json({ message: 'Invalid credentials' });
-        }
-        
-        req.session.user = { id: user.UserID, username: user.Username };
-        res.json({ message: 'Login successful', user: req.session.user });
-    });
+    // Mock response instead of querying the database
+    res.json({ message: 'Mock Login Successful', user: { id: 1, username: req.body.username } });
 });
+
+//app.post('/login', (req, res) => {
+    //const { username, password } = req.body;
+    
+    //db.query('SELECT * FROM Users WHERE Username = ?', [username], async (err, results) => {
+        //if (err) return res.status(500).json({ error: err.message });
+        
+        //if (results.length === 0) {
+           // return res.status(401).json({ message: 'User not found' });
+       // }
+        
+        //const user = results[0];
+        //const match = await bcrypt.compare(password, user.PasswordHash);
+        
+       // if (!match) {
+           // return res.status(401).json({ message: 'Invalid credentials' });
+        //}
+        
+        //req.session.user = { id: user.UserID, username: user.Username };
+        //res.json({ message: 'Login successful', user: req.session.user });
+    //});
+//});
 
 // User Logout Route
 app.post('/logout', (req, res) => {
