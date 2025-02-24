@@ -61,6 +61,28 @@ Templates provide a consistent structure for all features. Each assigned module 
 ---
 
 ### **Frontend (React)**
+📂 **sportschat-frontend/**
+```
+📂 public/                 # Static assets (unchanged)
+ ┣ 📜 favicon.ico
+ ┣ 📜 index.html
+ ┣ 📜 logo192.png
+ ┣ 📜 logo512.png
+ ┣ 📜 manifest.json
+ ┣ 📜 robots.txt
+📂 src/
+ ┣ 📂 components/           # UI components
+ ┣ 📂 pages/                # Full-page components
+ ┣ 📂 services/             # API interactions
+ ┃ ┣ 📜 api.js
+ ┣ 📜 App.js                # Main app component
+ ┣ 📜 index.js              # Entry point
+ ┣ 📜 App.css
+ ┣ 📜 index.css
+ ┣ 📜 logo.svg
+ ┣ 📜 reportWebVitals.js
+ ┣ 📜 setupTests.js
+```
 1. **Navigate to the frontend folder:**
    ```sh
    cd sportschat-frontend
@@ -166,5 +188,3 @@ Each developer should:
 4. Review the documentation in the `documents/` folder as needed.
 
 ---
- 
-
