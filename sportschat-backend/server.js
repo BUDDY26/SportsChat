@@ -4,14 +4,24 @@ const mysql = require('mysql2');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 const dotenv = require('dotenv');
+const cors = require('cors'); // Import CORS
 
 dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 // Middleware
+// Enable CORS for Frontend
+app.use(cors({
+    origin: 'http://localhost:3000', // Allow React frontend
+    credentials: true // Allow cookies/session sharing
+}));
+
+// JSON & URL Encoding Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Session Middleware
 app.use(session({
     secret: 'secret_key',
     resave: false,
@@ -82,7 +92,7 @@ app.get('/me', (req, res) => {
     res.json({ user: req.session.user });
 });
 
-// Start Server
+// ========================== Start Server ==========================
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
