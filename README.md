@@ -77,7 +77,7 @@ Templates provide a consistent structure for all features. Each assigned module 
  ┃ ┣ 📜 api.js
  ┣ 📜 App.js                # Main app component
  ┣ 📜 index.js              # Entry point
- ┣ 📜 App.css
+ ┣ 📜 App.css               # Global styles
  ┣ 📜 index.css
  ┣ 📜 logo.svg
  ┣ 📜 reportWebVitals.js
@@ -99,39 +99,83 @@ Templates provide a consistent structure for all features. Each assigned module 
 
 ---
 
+## **Frontend Navigation & Components**
+### **React Router Setup**
+To enable page navigation, install React Router:
+```sh
+npm install react-router-dom
+```
+
+**`App.js` to handle navigation between pages:**
+```jsx
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import LoginPage from "./pages/LoginPage";
+import ChatPage from "./pages/ChatPage";
+import Navbar from "./components/Navbar";
+
+function App() {
+  return (
+    <Router>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/chat" element={<ChatPage />} />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;
+```
+
+### **Reusable UI Components**
+
+📂 `sportschat-frontend/src/components/Navbar.js`
+```jsx
+import { Link } from "react-router-dom";
+
+function Navbar() {
+  return (
+    <nav>
+      <Link to="/">Home</Link>
+      <Link to="/login">Login</Link>
+      <Link to="/chat">Chat</Link>
+    </nav>
+  );
+}
+
+export default Navbar;
+```
+
+📂 `sportschat-frontend/src/components/Button.js`
+```jsx
+function Button({ text, onClick }) {
+  return <button onClick={onClick}>{text}</button>;
+}
+
+export default Button;
+```
+
+---
+
 ## **Branching & Collaboration**
 ### **1️⃣ Create a New Branch for Each Feature**
 To prevent conflicts, every feature should be developed in its own branch before merging into `main`:
-
 ```sh
 git checkout -b feature-branch-name
 ```
-Example:
-```sh
-git checkout -b login-api
-```
 
 ### **2️⃣ Commit Your Changes Regularly**
-After making updates, commit your changes:
-
 ```sh
 git add .
 git commit -m "Added feature: [describe the change]"
 ```
-Example:
-```sh
-git commit -m "Added login endpoint with bcrypt authentication"
-```
 
 ### **3️⃣ Push Your Branch to GitHub**
-Once the feature is complete, push it to GitHub:
-
 ```sh
 git push origin feature-branch-name
-```
-Example:
-```sh
-git push origin login-api
 ```
 
 ### **4️⃣ Open a Pull Request (PR)**
@@ -141,42 +185,6 @@ git push origin login-api
 - Select your branch and request a merge into `main`.
 
 🚨 **Pull requests must be reviewed before merging to ensure code quality and prevent breaking the main branch.**
-
----
-
-## **Branch Protection Rules**
-🛠 **Direct commits to `main` are restricted** to maintain stability. Instead:
-- All contributions must be made via pull requests.
-- Pull requests require at least **one approval** before merging.
-- Any conflicts must be resolved before merging.
-- Automated tests (if set up) must pass before merging.
-
----
-
-## **Contributing Guidelines**
-- Follow the **API-UI-FRONTEND-BACKEND_GUIDELINES.docx** for a standardized approach.
-- Use the corresponding template file when adding new features.
-- Keep commits small and descriptive.
-- Always create a **pull request** for review before merging.
-
----
-
-## **Error Handling & Logging**
-For consistency, error handling should follow a structured approach:
-1. Use `try/catch` blocks to handle errors in API routes.
-2. Log errors for debugging purposes.
-3. Ensure meaningful error messages are returned to the frontend.
-
-### **CORS Setup**
-Cross-Origin Resource Sharing (CORS) allows the frontend to communicate with the backend. It should be enabled in `server.js`:
-
-```js
-const cors = require('cors');
-app.use(cors({
-    origin: 'http://localhost:3000', // Frontend URL
-    credentials: true
-}));
-```
 
 ---
 
