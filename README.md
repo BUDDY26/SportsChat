@@ -185,7 +185,32 @@ git push origin feature-branch-name
 - Select your branch and request a merge into `main`.
 
 🚨 **Pull requests must be reviewed before merging to ensure code quality and prevent breaking the main branch.**
+## **Branch Protection Rules**
+To maintain code quality and prevent breaking changes, the following rules apply:
 
+1. **Require a pull request before merging**  
+   - All changes must be reviewed via pull requests before merging into `main`.  
+
+2. **Require approvals**  
+   - At least one team member must approve a pull request before it is merged.  
+
+3. **Dismiss stale pull request approvals when new commits are pushed**  
+   - If new commits are added to a pull request, previous approvals will be dismissed, requiring another review.  
+
+4. **Require approval of the most recent reviewable push**  
+   - The most recent version of the code must be approved by someone other than the contributor before merging.  
+
+5. **Require status checks to pass before merging**  
+   - All required checks (such as tests and linting) must pass before merging into `main`.  
+
+6. **Require branches to be up to date before merging**  
+   - Developers must pull the latest `main` branch and resolve conflicts before merging their changes.  
+
+7. **Developers must frequently update their local main branch**  
+   - Before starting new features, always fetch and rebase or merge the latest `main` branch to prevent conflicts.  
+
+8. **Do not allow bypassing these rules**  
+   - The above rules apply to all contributors, including administrators.  
 ---
 
 ## **Next Steps**
