@@ -1,0 +1,491 @@
+.login {
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .login .div {
+    background-color: #ffffff;
+    height: 936px;
+    overflow: hidden;
+    position: relative;
+    width: 1440px;
+  }
+  
+  .login .overlap-group {
+    background-image: url(./Logo.png);
+    background-position: 50% 50%;
+    background-size: cover;
+    height: 775px;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 1440px;
+  }
+  
+  .login .text-wrapper-2 {
+    color: #2171cd;
+    font-family: "Arial-Regular", Helvetica;
+    font-size: 14px;
+    font-weight: 400;
+    left: 499px;
+    letter-spacing: 0;
+    line-height: 19.6px;
+    position: absolute;
+    top: 324px;
+    width: 112px;
+  }
+  
+  .login .text-wrapper-3 {
+    color: #222222;
+    font-family: "Arial-Regular", Helvetica;
+    font-size: 14px;
+    font-weight: 400;
+    left: 568px;
+    letter-spacing: 0;
+    line-height: 19.6px;
+    position: absolute;
+    text-align: center;
+    top: 436px;
+    white-space: nowrap;
+    width: 118px;
+  }
+  
+  .login .text-wrapper-4 {
+    color: #2171cd;
+    font-family: "Arial-Regular", Helvetica;
+    font-size: 14px;
+    font-weight: 400;
+    left: 717px;
+    letter-spacing: 0;
+    line-height: 19.6px;
+    position: absolute;
+    text-align: center;
+    top: 436px;
+    white-space: nowrap;
+    width: 50px;
+  }
+  
+  .login .text-wrapper-5 {
+    color: #222222;
+    font-family: "Arial-Regular", Helvetica;
+    font-size: 28px;
+    font-weight: 400;
+    left: 499px;
+    letter-spacing: 0;
+    line-height: 39.2px;
+    position: absolute;
+    top: 138px;
+    white-space: nowrap;
+    width: 106px;
+  }
+  
+  .login .text-wrapper-6 {
+    color: #222222;
+    font-family: "Arial-Regular", Helvetica;
+    font-size: 14px;
+    font-weight: 400;
+    left: 499px;
+    letter-spacing: 0;
+    line-height: 19.6px;
+    position: absolute;
+    top: 182px;
+    white-space: nowrap;
+    width: 37px;
+  }
+  
+  .login .rectangle {
+    background-color: #ffffff;
+    border: 1px solid;
+    border-color: #4a4a4a;
+    height: 37px;
+    left: 499px;
+    position: absolute;
+    top: 205px;
+    width: 420px;
+  }
+  
+  .login .text-wrapper-7 {
+    color: #222222;
+    font-family: "Arial-Regular", Helvetica;
+    font-size: 14px;
+    font-weight: 400;
+    left: 499px;
+    letter-spacing: 0;
+    line-height: 19.6px;
+    position: absolute;
+    top: 261px;
+    white-space: nowrap;
+    width: 66px;
+  }
+  
+  .login .overlap {
+    background-color: #ffffff;
+    border: 1px solid;
+    border-color: #4a4a4a;
+    height: 37px;
+    left: 499px;
+    position: absolute;
+    top: 283px;
+    width: 420px;
+  }
+  
+  .login .show {
+    color: #222222;
+    font-family: "Arial-Regular", Helvetica;
+    font-size: 11px;
+    font-weight: 400;
+    left: 372px;
+    letter-spacing: 0;
+    line-height: 15.7px;
+    position: absolute;
+    top: 7px;
+    white-space: nowrap;
+    width: 35px;
+  }
+  
+  .login .log-in {
+    left: 499px !important;
+    position: absolute !important;
+    top: 374px !important;
+  }
+  
+  .login .overlap-2 {
+    height: 165px;
+    left: 0;
+    position: absolute;
+    top: 775px;
+    width: 1440px;
+  }
+  
+  .login .rectangle-2 {
+    background-color: #333333;
+    height: 164px;
+    left: 0;
+    position: absolute;
+    top: 1px;
+    width: 1440px;
+  }
+  
+  .login .p {
+    color: #cccccc;
+    font-family: "Segoe UI-Regular", Helvetica;
+    font-size: 13px;
+    font-weight: 400;
+    left: 368px;
+    letter-spacing: 0;
+    line-height: 18.2px;
+    position: absolute;
+    top: 0;
+    width: 698px;
+  }
+  
+  .login .text-wrapper-8 {
+    color: #cccccc;
+    font-family: "Segoe UI-Regular", Helvetica;
+    font-size: 12px;
+    font-weight: 400;
+    left: 584px;
+    letter-spacing: 0;
+    line-height: 16.8px;
+    position: absolute;
+    text-align: center;
+    top: 79px;
+    white-space: nowrap;
+    width: 86px;
+  }
+  
+  .login .text-wrapper-9 {
+    color: #cccccc;
+    font-family: "Segoe UI-Regular", Helvetica;
+    font-size: 12px;
+    font-weight: 400;
+    left: 707px;
+    letter-spacing: 0;
+    line-height: 16.8px;
+    position: absolute;
+    text-align: center;
+    top: 79px;
+    white-space: nowrap;
+    width: 71px;
+  }
+  
+  .sign-up {
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .sign-up .overlap-group-wrapper {
+    background-color: #ffffff;
+    height: 936px;
+    width: 1440px;
+  }
+  
+  .sign-up .overlap-group {
+    height: 936px;
+    position: relative;
+  }
+  
+  .sign-up .DALLE {
+    height: 775px;
+    left: 0;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    width: 1440px;
+  }
+  
+  .sign-up .rectangle {
+    background-color: #333333;
+    height: 164px;
+    left: 0;
+    position: absolute;
+    top: 772px;
+    width: 1440px;
+  }
+  
+  .sign-up .div {
+    color: #cccccc;
+    font-family: "Segoe UI-Regular", Helvetica;
+    font-size: 13px;
+    font-weight: 400;
+    left: 368px;
+    letter-spacing: 0;
+    line-height: 18.2px;
+    position: absolute;
+    top: 775px;
+    width: 698px;
+  }
+  
+  .sign-up .text-wrapper-2 {
+    color: #cccccc;
+    font-family: "Segoe UI-Regular", Helvetica;
+    font-size: 12px;
+    font-weight: 400;
+    left: 584px;
+    letter-spacing: 0;
+    line-height: 16.8px;
+    position: absolute;
+    text-align: center;
+    top: 854px;
+    white-space: nowrap;
+    width: 86px;
+  }
+  
+  .sign-up .text-wrapper-3 {
+    color: #cccccc;
+    font-family: "Segoe UI-Regular", Helvetica;
+    font-size: 12px;
+    font-weight: 400;
+    left: 707px;
+    letter-spacing: 0;
+    line-height: 16.8px;
+    position: absolute;
+    text-align: center;
+    top: 854px;
+    white-space: nowrap;
+    width: 71px;
+  }
+  
+  .sign-up .p {
+    color: #000000;
+    font-family: "Arial-Regular", Helvetica;
+    font-size: 14px;
+    font-weight: 400;
+    left: 499px;
+    letter-spacing: 0;
+    line-height: 19.6px;
+    position: absolute;
+    top: 324px;
+    width: 244px;
+  }
+  
+  .sign-up .text-wrapper-4 {
+    color: #222222;
+    font-family: "Arial-Regular", Helvetica;
+    font-size: 14px;
+    font-weight: 400;
+    left: 536px;
+    letter-spacing: 0;
+    line-height: 19.6px;
+    position: absolute;
+    text-align: center;
+    top: 436px;
+    white-space: nowrap;
+    width: 175px;
+  }
+  
+  .sign-up .text-wrapper-5 {
+    color: #2171cd;
+    font-family: "Arial-Regular", Helvetica;
+    font-size: 14px;
+    font-weight: 400;
+    left: 717px;
+    letter-spacing: 0;
+    line-height: 19.6px;
+    position: absolute;
+    text-align: center;
+    top: 436px;
+    white-space: nowrap;
+    width: 50px;
+  }
+  
+  .sign-up .text-wrapper-6 {
+    color: #222222;
+    font-family: "Arial-Regular", Helvetica;
+    font-size: 28px;
+    font-weight: 400;
+    left: 499px;
+    letter-spacing: 0;
+    line-height: 39.2px;
+    position: absolute;
+    top: 138px;
+    white-space: nowrap;
+    width: 106px;
+  }
+  
+  .sign-up .text-wrapper-7 {
+    color: #222222;
+    font-family: "Arial-Regular", Helvetica;
+    font-size: 14px;
+    font-weight: 400;
+    left: 499px;
+    letter-spacing: 0;
+    line-height: 19.6px;
+    position: absolute;
+    top: 182px;
+    white-space: nowrap;
+    width: 37px;
+  }
+  
+  .sign-up .rectangle-2 {
+    background-color: #ffffff;
+    border: 1px solid;
+    border-color: #4a4a4a;
+    height: 37px;
+    left: 499px;
+    position: absolute;
+    top: 205px;
+    width: 420px;
+  }
+  
+  .sign-up .text-wrapper-8 {
+    color: #222222;
+    font-family: "Arial-Regular", Helvetica;
+    font-size: 14px;
+    font-weight: 400;
+    left: 499px;
+    letter-spacing: 0;
+    line-height: 19.6px;
+    position: absolute;
+    top: 261px;
+    white-space: nowrap;
+    width: 66px;
+  }
+  
+  .sign-up .rectangle-3 {
+    background-color: #ffffff;
+    border: 1px solid;
+    border-color: #4a4a4a;
+    height: 37px;
+    left: 499px;
+    position: absolute;
+    top: 283px;
+    width: 420px;
+  }
+  
+  .sign-up .show {
+    color: #222222;
+    font-family: "Arial-Regular", Helvetica;
+    font-size: 11px;
+    font-weight: 400;
+    left: 872px;
+    letter-spacing: 0;
+    line-height: 15.7px;
+    position: absolute;
+    top: 291px;
+    white-space: nowrap;
+    width: 35px;
+  }
+  
+  .sign-up .button-instance {
+    left: 501px !important;
+    position: absolute !important;
+    top: 363px !important;
+  }
+  
+  .button {
+    all: unset;
+    align-items: center;
+    border-radius: var(--size-radius-200);
+    box-sizing: border-box;
+    display: inline-flex;
+    gap: var(--size-space-200);
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .button .text-wrapper {
+    font-family: var(--single-line-body-base-font-family);
+    font-size: var(--single-line-body-base-font-size);
+    font-style: var(--single-line-body-base-font-style);
+    font-weight: var(--single-line-body-base-font-weight);
+    letter-spacing: var(--single-line-body-base-letter-spacing);
+    line-height: var(--single-line-body-base-line-height);
+    margin-top: -1.00px;
+    position: relative;
+    white-space: nowrap;
+    width: fit-content;
+  }
+  
+  .button.disabled-true {
+    border-color: var(--color-border-disabled-default);
+  }
+  
+  .button.primary {
+    background-color: var(--color-background-brand-default);
+  }
+  
+  .button.disabled-true.subtle {
+    background-color: var(--color-background-disabled-default);
+  }
+  
+  .button.neutral.disabled-false {
+    background-color: var(--color-background-neutral-tertiary);
+  }
+  
+  .button.neutral.disabled-true {
+    background-color: var(--color-background-disabled-default);
+  }
+  
+  .button .disabled-0-true {
+    color: var(--color-text-disabled-on-disabled);
+  }
+  
+  .button .variant-subtle.medium.disabled-0-false {
+    color: var(--color-text-neutral-default);
+  }
+  
+  .button:hover {
+    border: 1px solid;
+    border-color: var(--color-border-default-default);
+  }
+  
+  .button:hover .text-wrapper {
+    color: var(--color-text-default-default);
+  }
+  
+  .button:hover.neutral {
+    background-color: var(--color-background-neutral-tertiary-hover);
+  }
+  
+  .button:hover.primary {
+    background-color: var(--color-background-brand-hover);
+  }
+  
