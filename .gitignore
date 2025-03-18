@@ -1,0 +1,14 @@
+# Node.js dependencies
+node_modules/
+sportschat-backend/node_modules/
+sportschat-frontend/node_modules/
+
+# Environment variables
+.env
+
+# Editor settings
+.vscode/
+.DS_Store
+
+# Logs
+*.log
