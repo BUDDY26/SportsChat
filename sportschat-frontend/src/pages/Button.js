@@ -9,9 +9,14 @@ export const Button = ({
   variant,
   disabled = false,
   size,
+  onClick, // ✅ Added onClick support
 }) => {
   return (
-    <button className={`button disabled-${disabled} ${variant}`}>
+    <button
+      type="button" // ✅ Prevents form from submitting unexpectedly
+      onClick={onClick} // ✅ Pass click handler
+      className={`button disabled-${disabled} ${variant}`}
+    >
       <div
         className={`text-wrapper disabled-0-${disabled} variant-${variant} ${size}`}
       >
@@ -28,4 +33,5 @@ Button.propTypes = {
   variant: PropTypes.oneOf(["primary", "neutral", "subtle"]),
   disabled: PropTypes.bool,
   size: PropTypes.oneOf(["medium", "small"]),
+  onClick: PropTypes.func, // ✅ Added prop validation
 };
