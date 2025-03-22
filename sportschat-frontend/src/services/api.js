@@ -6,6 +6,17 @@ const API = axios.create({
     withCredentials: true, // Allows cookies to be sent for session authentication
 });
 
+// Function to handle user signup
+export const signup = async (username, email, password) => {
+    try {
+        const response = await API.post('/signup', { username, email, password });
+        return response.data; // Returns success message
+    } catch (error) {
+        console.error('Signup error:', error.response?.data || error.message);
+        throw error; // Propagate error to handle it in the frontend
+    }
+};
+
 // Function to handle user login
 export const login = async (username, password) => {
     try {
