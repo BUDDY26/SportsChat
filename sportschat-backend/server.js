@@ -1,27 +1,46 @@
 // Import dependencies
 const express = require('express');
-const mysql = require('mysql2');
+const sql = require('mssql'); // Use MSSQL instead of MySQL2
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 const dotenv = require('dotenv');
-const cors = require('cors'); // Import CORS
+const cors = require('cors');
 
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-// Enable CORS for Frontend
-app.use(cors({
-    origin: 'http://localhost:3000', // Allow React frontend
-    credentials: true // Allow cookies/session sharing
-}));
+// Configure MSSQL Database Connection
+const dbConfig = {
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    server: process.env.DB_SERVER,
+    database: process.env.DB_NAME,
+    port: parseInt(process.env.DB_PORT || '1433'),
+    options: {
+        encrypt: process.env.DB_ENCRYPT === 'true',
+        trustServerCertificate: true,
+    }
+};
 
-// JSON & URL Encoding Middleware
+// Connect to MSSQL Database
+async function connectDB() {
+    try {
+        await sql.connect(dbConfig);
+        console.log('Connected to MSSQL database');
+    } catch (err) {
+        console.error('Database connection failed:', err);
+    }
+}
+connectDB();
+
+// Middleware
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Session Middleware
 app.use(session({
     secret: 'secret_key',
     resave: false,
@@ -29,52 +48,64 @@ app.use(session({
     cookie: { secure: false }
 }));
 
-// ========================== Temporarily Skipping Database Connection ==========================
-// console.log('Skipping database connection for now');
-// MySQL Database Connection 
-//const db = mysql.createConnection({
-    //host: process.env.DB_HOST || 'localhost',
-    //user: process.env.DB_USER || 'root',
-    //password: process.env.DB_PASSWORD || '',
-    //database: process.env.DB_NAME || 'SportsChatDB'
-//});
+// User Signup Route
+app.post('/signup', async (req, res) => {
+    const { username, email, password } = req.body;
 
-//db.connect(err => {
-    //if (err) {
-        //console.error('Database connection failed:', err);
-        //return;
-    //}
-    //console.log('Connected to MySQL database');
-//});
+    if (!username || !email || !password) {
+        return res.status(400).json({ message: 'All fields are required.' });
+    }
 
-// User Login Route
-// User Login Route (Temporarily Mocked)
-app.post('/login', (req, res) => {
-    // Mock response instead of querying the database
-    res.json({ message: 'Mock Login Successful', user: { id: 1, username: req.body.username } });
+    try {
+        // Check if username or email already exists
+        const check = await sql.query`
+            SELECT * FROM Users 
+            WHERE Username = ${username} OR Email = ${email}
+        `;
+
+        if (check.recordset.length > 0) {
+            return res.status(409).json({ message: 'Username or email already in use.' });
+        }
+
+        // Hash the password
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+        // Insert new user
+        await sql.query`
+            INSERT INTO Users (Username, Email, PasswordHash, CreatedAt)
+            VALUES (${username}, ${email}, ${hashedPassword}, GETDATE())
+        `;
+
+        res.status(201).json({ message: 'Signup successful.' });
+    } catch (err) {
+        console.error('Signup failed:', err);
+        res.status(500).json({ message: 'Internal server error.' });
+    }
 });
 
-//app.post('/login', (req, res) => {
-    //const { username, password } = req.body;
-    
-    //db.query('SELECT * FROM Users WHERE Username = ?', [username], async (err, results) => {
-        //if (err) return res.status(500).json({ error: err.message });
-        
-        //if (results.length === 0) {
-           // return res.status(401).json({ message: 'User not found' });
-       // }
-        
-        //const user = results[0];
-        //const match = await bcrypt.compare(password, user.PasswordHash);
-        
-       // if (!match) {
-           // return res.status(401).json({ message: 'Invalid credentials' });
-        //}
-        
-        //req.session.user = { id: user.UserID, username: user.Username };
-        //res.json({ message: 'Login successful', user: req.session.user });
-    //});
-//});
+// User Login Route
+app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+    try {
+        const result = await sql.query`SELECT * FROM Users WHERE Username = ${username}`;
+        if (result.recordset.length === 0) {
+            return res.status(401).json({ message: 'User not found' });
+        }
+
+        const user = result.recordset[0];
+        const match = await bcrypt.compare(password, user.PasswordHash);
+
+        if (!match) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        req.session.user = { id: user.UserID, username: user.Username };
+        res.json({ message: 'Login successful', user: req.session.user });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 // User Logout Route
 app.post('/logout', (req, res) => {
@@ -92,7 +123,12 @@ app.get('/me', (req, res) => {
     res.json({ user: req.session.user });
 });
 
-// ========================== Start Server ==========================
+// Root Route
+app.get("/", (req, res) => {
+    res.send("SportsChat Backend is Running!");
+});
+
+// Start Server
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
