@@ -1,87 +1,114 @@
-/*
-=====================================================
-File: server.js
-Module: Authentication & API
-Date: [Insert Date]
-Author: [Your Name]
-Modified: [Latest Modification Date]
-Description:
-  - Handles user authentication, session management, and database connection.
-  - Provides API routes for login, logout, user registration, and session verification.
-  - Ensures secure password hashing and session storage.
-=====================================================
-*/
-
-// Import Dependencies
+// Import dependencies
 const express = require('express');
-const mysql = require('mysql2');
+const sql = require('mssql'); // Use MSSQL instead of MySQL2
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 const dotenv = require('dotenv');
+const cors = require('cors');
 
 dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
-// ========================== Middleware ==========================
+// Configure MSSQL Database Connection
+const dbConfig = {
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    server: process.env.DB_SERVER,
+    database: process.env.DB_NAME,
+    port: parseInt(process.env.DB_PORT || '1433'),
+    options: {
+        encrypt: process.env.DB_ENCRYPT === 'true',
+        trustServerCertificate: true,
+    }
+};
+
+// Connect to MSSQL Database
+async function connectDB() {
+    try {
+        await sql.connect(dbConfig);
+        console.log('Connected to MSSQL database');
+    } catch (err) {
+        console.error('Database connection failed:', err);
+    }
+}
+connectDB();
+
+// Middleware
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'default_secret',
+    secret: 'secret_key',
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false }
 }));
 
-// ========================== Database Connection ==========================
-const db = mysql.createConnection({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'SportsChatDB'
-});
+// User Routes - Can be moved to separate route files later
+// User Signup Route
+app.post('/signup', async (req, res) => {
+    const { username, email, password } = req.body;
 
-db.connect(err => {
-    if (err) {
-        console.error('Database connection failed:', err);
-        return;
+    if (!username || !email || !password) {
+        return res.status(400).json({ message: 'All fields are required.' });
     }
-    console.log('Connected to MySQL database');
+
+    try {
+        // Check if username or email already exists
+        const check = await sql.query`
+            SELECT * FROM Users 
+            WHERE Username = ${username} OR Email = ${email}
+        `;
+
+        if (check.recordset.length > 0) {
+            return res.status(409).json({ message: 'Username or email already in use.' });
+        }
+
+        // Hash the password
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+        // Insert new user
+        await sql.query`
+            INSERT INTO Users (Username, Email, PasswordHash, CreatedAt)
+            VALUES (${username}, ${email}, ${hashedPassword}, GETDATE())
+        `;
+
+        res.status(201).json({ message: 'Signup successful.' });
+    } catch (err) {
+        console.error('Signup failed:', err);
+        res.status(500).json({ message: 'Internal server error.' });
+    }
 });
 
-// ========================== API Routes ==========================
-
-/**
- * User Login Route
- * @param {string} username - User's login name
- * @param {string} password - User's password
- * @returns {Object} JSON response (success/failure)
- */
-app.post('/login', (req, res) => {
+// User Login Route
+app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    
-    db.query('SELECT * FROM Users WHERE Username = ?', [username], async (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        
-        if (results.length === 0) {
+    try {
+        const result = await sql.query`SELECT * FROM Users WHERE Username = ${username}`;
+        if (result.recordset.length === 0) {
             return res.status(401).json({ message: 'User not found' });
         }
-        
-        const user = results[0];
+
+        const user = result.recordset[0];
         const match = await bcrypt.compare(password, user.PasswordHash);
-        
+
         if (!match) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
-        
+
         req.session.user = { id: user.UserID, username: user.Username };
         res.json({ message: 'Login successful', user: req.session.user });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-/**
- * User Logout Route
- */
+// User Logout Route
 app.post('/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) return res.status(500).json({ message: 'Logout failed' });
@@ -89,9 +116,7 @@ app.post('/logout', (req, res) => {
     });
 });
 
-/**
- * Get Current User (Session Check)
- */
+// Get Current User (Session Check)
 app.get('/me', (req, res) => {
     if (!req.session.user) {
         return res.status(401).json({ message: 'Not logged in' });
@@ -99,7 +124,76 @@ app.get('/me', (req, res) => {
     res.json({ user: req.session.user });
 });
 
-// ========================== Start Server ==========================
+// Database test endpoint
+app.get('/api/test-database', async (req, res) => {
+    try {
+        // Use your existing connection configuration
+        console.log('Database test endpoint called');
+        
+        // Run a simple query to test connection
+        const connectionTest = await sql.query`SELECT 1 as connected`;
+        console.log('Basic connection test successful');
+        
+        try {
+            // Get game count and date range
+            const result = await sql.query`
+            SELECT 
+                COUNT(*) as gameCount,
+                MIN(DatePlayed) as earliestGame,
+                MAX(DatePlayed) as latestGame
+            FROM games
+            `;
+            
+            console.log('Games query successful:', result.recordset);
+            
+            // Get recent games
+            const recentGames = await sql.query`
+            SELECT TOP 5 
+                GameID as game_id, 
+                Team1ID as team1, 
+                Team2ID as team2, 
+                ScoreTeam1 as score1, 
+                ScoreTeam2 as score2,
+                DatePlayed as game_date
+            FROM games
+            ORDER BY DatePlayed DESC
+            `;
+            
+            console.log('Recent games query successful');
+            
+            // Return success response
+            res.json({
+            success: true,
+            message: "Successfully connected to database",
+            stats: result.recordset[0],
+            recentGames: recentGames.recordset
+            });
+        } catch (specificErr) {
+            console.error('Specific query error:', specificErr.message);
+            res.status(500).json({
+            success: false,
+            message: "Database connected but query failed",
+            error: specificErr.message
+            });
+        }
+    } catch (err) {
+        console.error('Database connection error in test endpoint:', err.message);
+        
+        // Return error response
+        res.status(500).json({
+            success: false,
+            message: "Failed to connect to database",
+            error: err.message
+        });
+    }
+});
+
+// Root Route
+app.get("/", (req, res) => {
+    res.send("SportsChat Backend is Running!");
+});
+
+// Start Server
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });

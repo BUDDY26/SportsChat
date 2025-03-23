@@ -1,6 +1,6 @@
 # SportsChat+
 
-Sports Chat+ is a database-driven web platform.
+Sports Chat+ is a database-driven web platform for NCAA tournament discussions, statistics, and user engagement.
 
 ---
 
@@ -12,6 +12,15 @@ This repository contains both frontend and backend code, as well as templates an
 - **sportschat-backend/** → Holds the backend code (server-side logic, database interactions, and API routes).
 - **sportschat-frontend/** → Holds the frontend code (React components, styles, and services for interacting with the backend).
 - **templates/** → Contains predefined module templates for backend and frontend components.
+
+---
+
+## **Technology Stack**
+
+- **Frontend**: React.js, React Router
+- **Backend**: Node.js, Express
+- **Database**: Azure SQL
+- **Authentication**: Express-session, bcrypt
 
 ---
 
@@ -28,17 +37,18 @@ Templates provide a consistent structure for all features. Each assigned module 
 📂 **templates/**
 | Template File | Purpose | Apply To |
 |--------------|---------|----------|
-| `server-template.js` | General backend structure for Express routes | Backend (`sportschat-backend/`) |
-| `user-template.js` | Handles user-related API endpoints | Backend (`sportschat-backend/`) |
-| `chat-template.js` | Handles chat-related API endpoints | Backend (`sportschat-backend/`) |
-| `post-template.js` | Handles post-related API endpoints | Backend (`sportschat-backend/`) |
-| `database-template.js` | Database connection & models | Backend (`sportschat-backend/`) |
+| `backend-templates/server-template.js` | Express server setup | Backend (`sportschat-backend/`) |
+| `backend-templates/route-template.js` | API endpoint structure | Backend (`sportschat-backend/`) |
+| `backend-templates/auth-routes-template.js` | Authentication endpoints | Backend (`sportschat-backend/`) |
+| `frontend-templates/page-template.js` | React page components | Frontend (`sportschat-frontend/src/pages/`) |
+| `frontend-templates/form-component-template.js` | User input forms | Frontend (`sportschat-frontend/src/components/`) |
+| `frontend-templates/data-display-template.js` | Data presentation | Frontend (`sportschat-frontend/src/components/`) |
 
 ### **How to Apply a Template**
-1. Navigate to the `sportschat-backend/` folder.
-2. Identify the module you are assigned (e.g., user authentication).
-3. Copy the corresponding template file from `templates/` and rename it appropriately (e.g., `userRoutes.js`).
-4. Implement your feature by following the structure in the template.
+1. Choose the appropriate template based on what you're building
+2. Copy the template file to the correct location
+3. Rename it according to your feature (e.g., `TeamsPage.js`, `teamRoutes.js`)
+4. Modify the template code to implement your specific feature
 
 ---
 
@@ -52,9 +62,23 @@ Templates provide a consistent structure for all features. Each assigned module 
    ```sh
    npm install
    ```
-3. **Start the server:**
+3. **Create a `.env` file with the following configuration:**
+   ```
+   DB_USER=your_db_username
+   DB_PASSWORD=your_db_password
+   DB_SERVER=your_azure_server_name.database.windows.net
+   DB_NAME=your_database_name
+   DB_PORT=1433
+   DB_ENCRYPT=true
+   PORT=5000
+   ```
+4. **Start the server:**
    ```sh
    npm start
+   ```
+   - For development with auto-reload:
+   ```sh
+   nodemon server.js
    ```
    - The backend runs on **http://localhost:5000**.
 
@@ -63,26 +87,19 @@ Templates provide a consistent structure for all features. Each assigned module 
 ### **Frontend (React)**
 📂 **sportschat-frontend/**
 ```
-📂 public/                 # Static assets (unchanged)
- ┣ 📜 favicon.ico
- ┣ 📜 index.html
- ┣ 📜 logo192.png
- ┣ 📜 logo512.png
- ┣ 📜 manifest.json
- ┣ 📜 robots.txt
+📂 public/                 # Static assets
 📂 src/
- ┣ 📂 components/           # UI components
- ┣ 📂 pages/                # Full-page components
- ┣ 📂 services/             # API interactions
- ┃ ┣ 📜 api.js
- ┣ 📜 App.js                # Main app component
- ┣ 📜 index.js              # Entry point
- ┣ 📜 App.css               # Global styles
- ┣ 📜 index.css
- ┣ 📜 logo.svg
- ┣ 📜 reportWebVitals.js
- ┣ 📜 setupTests.js
+ ┣ 📂 components/          # UI components
+ ┣ 📂 pages/               # Full-page components
+ ┃ ┣ 📜 HomePage.js
+ ┃ ┣ 📜 LoginPage.js
+ ┃ ┣ 📜 SignupPage.js
+ ┃ ┣ 📜 ForgotPasswordPage.js
+ ┃ ┣ 📜 SimplifiedDatabaseTestPage.js
+ ┣ 📜 App.js               # Main app component with routes
+ ┣ 📜 index.js             # Entry point
 ```
+
 1. **Navigate to the frontend folder:**
    ```sh
    cd sportschat-frontend
@@ -99,64 +116,78 @@ Templates provide a consistent structure for all features. Each assigned module 
 
 ---
 
-## **Frontend Navigation & Components**
-### **React Router Setup**
-To enable page navigation, install React Router:
-```sh
-npm install react-router-dom
+## **Database Configuration**
+
+The application uses Azure SQL Database to store all data. The current database schema includes:
+
+### **Key Tables**
+- `Games`: Stores tournament game information (GameID, DatePlayed, Team1ID, Team2ID, ScoreTeam1, ScoreTeam2)
+- `Teams`: Team data and statistics
+- `Users`: User account information
+- `ChatRooms`: Discussion rooms for games
+
+### **Database Connection Test**
+To verify your database connection, navigate to: 
+```
+http://localhost:3000/test-database
 ```
 
-**`App.js` to handle navigation between pages:**
-```jsx
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import HomePage from "./pages/HomePage";
-import LoginPage from "./pages/LoginPage";
-import ChatPage from "./pages/ChatPage";
-import Navbar from "./components/Navbar";
+This page will display:
+- Total game count
+- Date range of games
+- Recent games with scores
 
-function App() {
-  return (
-    <Router>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/chat" element={<ChatPage />} />
-      </Routes>
-    </Router>
-  );
+### **Frontend-Backend Communication**
+The frontend uses a proxy configuration in `package.json` to route API requests to the backend:
+
+```json
+{
+  "proxy": "http://localhost:5000"
 }
-
-export default App;
 ```
 
-### **Reusable UI Components**
+This allows the React app to make relative URL requests (e.g., `/api/test-database`) that are automatically forwarded to the backend server.
 
-📂 `sportschat-frontend/src/components/Navbar.js`
-```jsx
-import { Link } from "react-router-dom";
+---
 
-function Navbar() {
-  return (
-    <nav>
-      <Link to="/">Home</Link>
-      <Link to="/login">Login</Link>
-      <Link to="/chat">Chat</Link>
-    </nav>
-  );
-}
+## **Features**
 
-export default Navbar;
-```
+- **User Authentication**
+  - Signup (registration)
+  - Login
+  - Password reset
+  
+- **NCAA Tournament Data**
+  - Real-time game statistics
+  - Tournament bracket
+  - Team information
+  
+- **User Interface**
+  - Clean, modern design
+  - Mobile-responsive layout
+  - Sports-themed visual elements
 
-📂 `sportschat-frontend/src/components/Button.js`
-```jsx
-function Button({ text, onClick }) {
-  return <button onClick={onClick}>{text}</button>;
-}
+---
 
-export default Button;
-```
+## **Adding New Features**
+
+To add a new feature to the application:
+
+1. **Create the frontend component**:
+   - Use the appropriate frontend template
+   - Add the route to `App.js`
+   - Implement the UI and data fetching
+
+2. **Create the backend API**:
+   - Use the route template for the API endpoint
+   - Add the route to `server.js`
+   - Implement database queries
+
+3. **Test the feature**:
+   - Make sure both frontend and backend servers are running
+   - Test all functionality and edge cases
+
+See the more detailed guides in the templates folder for step-by-step instructions.
 
 ---
 
@@ -185,6 +216,7 @@ git push origin feature-branch-name
 - Select your branch and request a merge into `main`.
 
 🚨 **Pull requests must be reviewed before merging to ensure code quality and prevent breaking the main branch.**
+
 ## **Branch Protection Rules**
 To maintain code quality and prevent breaking changes, the following rules apply:
 
@@ -197,20 +229,9 @@ To maintain code quality and prevent breaking changes, the following rules apply
 3. **Dismiss stale pull request approvals when new commits are pushed**  
    - If new commits are added to a pull request, previous approvals will be dismissed, requiring another review.  
 
-4. **Require approval of the most recent reviewable push**  
-   - The most recent version of the code must be approved by someone other than the contributor before merging.  
-
-5. **Require status checks to pass before merging**  
-   - All required checks (such as tests and linting) must pass before merging into `main`.  
-
-6. **Require branches to be up to date before merging**  
-   - Developers must pull the latest `main` branch and resolve conflicts before merging their changes.  
-
-7. **Developers must frequently update their local main branch**  
+4. **Developers must frequently update their local main branch**  
    - Before starting new features, always fetch and rebase or merge the latest `main` branch to prevent conflicts.  
 
-8. **Do not allow bypassing these rules**  
-   - The above rules apply to all contributors, including administrators.  
 ---
 
 ## **Next Steps**
