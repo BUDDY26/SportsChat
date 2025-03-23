@@ -1,0 +1,88 @@
+// templates/backend-templates/chat-routes-template.js
+const express = require('express');
+const router = express.Router();
+const sql = require('mssql');
+
+// Get list of chats for a user
+router.get('/', async (req, res) => {
+  try {
+    // In a real app, you'd get the user ID from the session
+    const userId = req.session.user?.id || 1;
+    
+    const result = await sql.query`
+      SELECT 
+        c.ChatID as id,
+        c.ChatName as name,
+        c.LastMessageTime as updatedAt,
+        (SELECT TOP 1 Content FROM Messages 
+         WHERE ChatID = c.ChatID 
+         ORDER BY CreatedAt DESC) as lastMessage
+      FROM ChatRooms c
+      JOIN ChatMembers cm ON c.ChatID = cm.ChatID
+      WHERE cm.UserID = ${userId}
+      ORDER BY c.LastMessageTime DESC
+    `;
+    
+    res.json({ chats: result.recordset });
+  } catch (err) {
+    console.error('Error fetching chats:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get a specific chat's messages
+router.get('/:chatId', async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    
+    const result = await sql.query`
+      SELECT 
+        MessageID as id,
+        ChatID as chatId,
+        SenderID as senderId,
+        Content as content,
+        CreatedAt as createdAt
+      FROM Messages 
+      WHERE ChatID = ${chatId}
+      ORDER BY CreatedAt ASC
+    `;
+    
+    res.json({ messages: result.recordset });
+  } catch (err) {
+    console.error('Error fetching messages:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Send a new message
+router.post('/:chatId', async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const { senderId, content } = req.body;
+    
+    // Validate required fields
+    if (!content || !senderId) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    // Insert the message
+    await sql.query`
+      INSERT INTO Messages (ChatID, SenderID, Content, CreatedAt)
+      VALUES (${chatId}, ${senderId}, ${content}, GETDATE())
+    `;
+    
+    // Update the last message time
+    await sql.query`
+      UPDATE ChatRooms
+      SET LastMessageTime = GETDATE()
+      WHERE ChatID = ${chatId}
+    `;
+    
+    res.json({ message: 'Message sent successfully' });
+  } catch (err) {
+    console.error('Error sending message:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+module.exports = router;
