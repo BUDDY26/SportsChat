@@ -123,6 +123,70 @@ app.get('/me', (req, res) => {
     res.json({ user: req.session.user });
 });
 
+// Database test endpoint
+app.get('/api/test-database', async (req, res) => {
+    try {
+      // Use your existing connection configuration
+      console.log('Database test endpoint called');
+      
+      // Run a simple query to test connection
+      const connectionTest = await sql.query`SELECT 1 as connected`;
+      console.log('Basic connection test successful');
+      
+      try {
+        // Get game count and date range
+        const result = await sql.query`
+          SELECT 
+            COUNT(*) as gameCount,
+            MIN(DatePlayed) as earliestGame,
+            MAX(DatePlayed) as latestGame
+          FROM games
+        `;
+        
+        console.log('Games query successful:', result.recordset);
+        
+        // Get recent games
+        const recentGames = await sql.query`
+          SELECT TOP 5 
+            GameID as game_id, 
+            Team1ID as team1, 
+            Team2ID as team2, 
+            ScoreTeam1 as score1, 
+            ScoreTeam2 as score2,
+            DatePlayed as game_date
+          FROM games
+          ORDER BY DatePlayed DESC
+        `;
+        
+        console.log('Recent games query successful');
+        
+        // Return success response
+        res.json({
+          success: true,
+          message: "Successfully connected to database",
+          stats: result.recordset[0],
+          recentGames: recentGames.recordset
+        });
+      } catch (specificErr) {
+        console.error('Specific query error:', specificErr.message);
+        res.status(500).json({
+          success: false,
+          message: "Database connected but query failed",
+          error: specificErr.message
+        });
+      }
+    } catch (err) {
+      console.error('Database connection error in test endpoint:', err.message);
+      
+      // Return error response
+      res.status(500).json({
+        success: false,
+        message: "Failed to connect to database",
+        error: err.message
+      });
+    }
+  });
+
 // Root Route
 app.get("/", (req, res) => {
     res.send("SportsChat Backend is Running!");
