@@ -1,68 +1,90 @@
 import React, { useState } from "react";
-import { Button } from "./Button";
+import { Link, useNavigate } from "react-router-dom";
+import { login } from "../services/api";
 import "./style.css";
 
 export const LoginPage = () => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Email:", email);
-    console.log("Password:", password);
+    setError("");
+    
+    try {
+      const response = await login(username, password);
+      console.log("Login successful:", response);
+      
+      // Store user data in localStorage
+      localStorage.setItem("user", JSON.stringify(response));
+      
+      // Navigate to home page
+      navigate("/");
+    } catch (err) {
+      console.error("Login error:", err);
+      setError(err.response?.data?.message || "Login failed");
+    }
   };
 
   return (
-    <div className="login">
-      <div className="div">
-        <div className="overlap-group">
-          <div className="text-wrapper-2">Forgot password?</div>
-          <div className="text-wrapper-3">Need an account?</div>
-          <div className="text-wrapper-4"><a href="/signup" style={{
-        display: 'inline-block',
-        padding: '10px 20px',
-        backgroundColor: '#007bff',
-        color: 'white',
-        textDecoration: 'none',
-        borderRadius: '4px',
-        fontWeight: 'bold',
-        cursor: 'pointer'
-      }}>
-        Sign Up
-      </a></div>
-          <div className="text-wrapper-5">Log In</div>
-          <div className="text-wrapper-6">Email</div>
+    <div className="login-page">
+      <div className="content-box">
+        <h2 className="page-title">Log In</h2>
+        
+        {error && (
+          <div className="error-message">{error}</div>
+        )}
+        
+        <div className="form-group">
+          <label>Username</label>
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="email-input"
-            placeholder="Enter your email"
-          />
-          <div className="rectangle" />
-          <div className="text-wrapper-7">Password</div>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="password-input"
-            placeholder="Enter your password"
-          />
-          <div className="overlap">
-            <div className="show">SHOW</div>
-          </div>
-          <Button
-            className="log-in"
-            label="Log In"
-            size="medium"
-            variant="primary"
-            onClick={handleSubmit}
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="form-input"
+            placeholder="Enter your username"
           />
         </div>
-        <div className="overlap-2">
-          <div className="rectangle-2" />
-          <p className="p">
+        
+        <div className="form-group">
+          <label>Password</label>
+          <div className="password-container">
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="form-input"
+              placeholder="Enter your password"
+            />
+            <span 
+              className="show-password"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? "HIDE" : "SHOW"}
+            </span>
+          </div>
+        </div>
+        
+        <div className="forgot-password">
+          <Link to="/forgot-password">Forgot password?</Link>
+        </div>
+        
+        <button 
+          className="primary-button"
+          onClick={handleSubmit}
+        >
+          Log In
+        </button>
+        
+        <div className="link-row">
+          Need an account? <Link to="/signup">Sign Up</Link>
+        </div>
+        
+        <div className="disclaimer">
+          <p>
             SportsChatPlus.com is not affiliated with the National Collegiate
             Athletic Association (NCAA®) or March Madness Athletic Association,
             neither of which has supplied, reviewed, approved, or endorsed the
@@ -70,8 +92,10 @@ export const LoginPage = () => {
             this site but makes no guarantee about the accuracy or completeness
             of the information herein.
           </p>
-          <div className="text-wrapper-8">Terms of Service</div>
-          <div className="text-wrapper-9">Privacy Policy</div>
+          <div style={{ marginTop: "10px" }}>
+            <Link to="/terms">Terms of Service</Link>
+            <Link to="/privacy">Privacy Policy</Link>
+          </div>
         </div>
       </div>
     </div>
