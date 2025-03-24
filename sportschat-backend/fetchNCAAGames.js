@@ -768,5 +768,5 @@ console.log(`Update interval set to: ${UPDATE_INTERVAL_MS / 1000} seconds (${UPD
 // Run immediately on startup
 runUpdate();
 
-// Then schedule to run every 5 minutes
+// Then schedule to run every 8 hours
 setInterval(runUpdate, UPDATE_INTERVAL_MS);

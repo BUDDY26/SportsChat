@@ -1,6 +1,6 @@
 // Import dependencies
 const express = require('express');
-const sql = require('mssql'); // Use MSSQL instead of MySQL2
+const sql = require('mssql'); 
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 const dotenv = require('dotenv');
@@ -9,7 +9,9 @@ const path = require('path');
 
 dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.NODE_ENV === 'production' 
+  ? (process.env.PORT || 8080)  // Use 8080 as default in production
+  : 5000;
 
 // Configure MSSQL Database Connection
 const dbConfig = {
@@ -202,6 +204,6 @@ app.get('*', (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://0.0.0.0:${PORT}`);
-});
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
