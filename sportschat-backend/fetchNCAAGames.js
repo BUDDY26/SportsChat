@@ -19,8 +19,12 @@ const dbConfig = {
   }
 };
 
-// Set the update interval (5 minutes = 300000 milliseconds)
-const UPDATE_INTERVAL_MS = 5 * 60 * 1000;
+// Then schedule to run every 8 hours
+const UPDATE_INTERVAL_MS = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
+
+console.log(`✔️ Update interval set to ${UPDATE_INTERVAL_MS / 3600000} hours`);
+
+
 
 // NCAA API URLs
 const NCAA_API_BASE = "https://ncaa-api.henrygd.me";
@@ -87,12 +91,12 @@ async function shouldUpdateGame(pool, gameID, team1Score, team2Score) {
     }
     
     // If more than 5 minutes has passed since last update, update it
-    const fiveMinutesAgo = new Date();
-    fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
+    //const fiveMinutesAgo = new Date();
+    //fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
     
-    if (lastUpdatedInDB < fiveMinutesAgo) {
-      return true;
-    }
+    //if (lastUpdatedInDB < fiveMinutesAgo) {
+      //return true;
+    //}
     
     return false;
   } catch (error) {
@@ -462,6 +466,10 @@ async function fetchAndStoreMarchMadnessData() {
           ? gameData.home.conferences[0].conferenceName : '';
         
         const round = gameData.bracketRound || "Unknown Round";
+        if (round === "Unknown Round") {
+          console.log(`⏭️ Skipping game due to unknown round: ${team1Name} vs ${team2Name}`);
+          continue;
+        }
         const location = gameData.venue && gameData.venue.name ? gameData.venue.name : "Unknown Location";
         const gameAPIID = gameData.gameID || '';
         const gameURL = gameData.url || '';
