@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 const session = require('express-session');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const path = require('path');
 
 dotenv.config();
 const app = express();
@@ -36,7 +37,9 @@ connectDB();
 
 // Middleware
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: process.env.NODE_ENV === 'production' 
+        ? 'https://sportschatplus.azurewebsites.net'  // Your Azure app URL
+        : 'http://localhost:3000',
     credentials: true
 }));
 app.use(express.json());
@@ -190,6 +193,12 @@ app.get('/api/test-database', async (req, res) => {
 // Root Route
 app.get("/", (req, res) => {
     res.send("SportsChat Backend is Running!");
+});
+
+app.use(express.static(path.join(__dirname, '../sportschat-frontend/build')));
+
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../sportschat-frontend/build/index.html'));
 });
 
 // Start Server
