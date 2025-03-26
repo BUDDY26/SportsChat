@@ -20,9 +20,11 @@ const dbConfig = {
 };
 
 // Then schedule to run every 8 hours
-const UPDATE_INTERVAL_MS = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
+//const UPDATE_INTERVAL_MS = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
+//console.log(`✔️ Update interval set to ${UPDATE_INTERVAL_MS / 3600000} hours`);
 
-console.log(`✔️ Update interval set to ${UPDATE_INTERVAL_MS / 3600000} hours`);
+console.log(`[${new Date().toISOString()}] NCAA Data Updater - Manual Execution`);
+console.log("Run this script manually with 'node fetchncaagames.js' to update NCAA data");
 
 
 
@@ -769,4 +771,5 @@ console.log(`Update interval set to: ${UPDATE_INTERVAL_MS / 1000} seconds (${UPD
 runUpdate();
 
 // Then schedule to run every 5 minutes
-setInterval(runUpdate, UPDATE_INTERVAL_MS);
+//setInterval(runUpdate, UPDATE_INTERVAL_MS);
+console.log(`[${new Date().toISOString()}] NCAA Data Updater - Manual Execution`);
