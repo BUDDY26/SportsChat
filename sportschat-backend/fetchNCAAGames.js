@@ -774,3 +774,7 @@ runUpdate();
 // NOTE: Automatic interval disabled
 // If needed later, uncomment the next line:
 // setInterval(runUpdate, UPDATE_INTERVAL_MS);
+
+console.log(`[${new Date().toISOString()}] NCAA Data Updater - Manual Execution`);
+
+
