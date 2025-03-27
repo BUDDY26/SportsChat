@@ -1,5 +1,5 @@
 // src/components/StatsPage.js
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getGameStats, getPlayerStats, getTeamStats } from "../services/api";
 
 const StatsPage = ({ activeMenu }) => {
@@ -16,21 +16,21 @@ const StatsPage = ({ activeMenu }) => {
     if (activeMenu === "stats" && activeStatsTab === "games") {
       fetchGameStats();
     }
-  }, [activeMenu, activeStatsTab, gameStatsFilter, fetchGameStats]);
+  }, [activeMenu, activeStatsTab, gameStatsFilter]);
 
   useEffect(() => {
     if (activeMenu === "stats" && activeStatsTab === "players") {
       fetchPlayerStats();
     }
-  }, [activeMenu, activeStatsTab, playerStatsFilter, fetchPlayerStats]);
+  }, [activeMenu, activeStatsTab, playerStatsFilter]);
 
   useEffect(() => {
     if (activeMenu === "stats" && activeStatsTab === "teams") {
       fetchTeamStats();
     }
-  }, [activeMenu, activeStatsTab, teamStatsFilter, fetchTeamStats]);
+  }, [activeMenu, activeStatsTab, teamStatsFilter]);
 
-  const fetchGameStats = useCallback(async () => {
+  const fetchGameStats = async () => {
     setStatsLoading(true);
     try {
       const data = await getGameStats(gameStatsFilter);
@@ -40,9 +40,9 @@ const StatsPage = ({ activeMenu }) => {
     } finally {
       setStatsLoading(false);
     }
-  }, [gameStatsFilter]);
-  
-  const fetchPlayerStats = useCallback(async () => {
+  };
+
+  const fetchPlayerStats = async () => {
     setStatsLoading(true);
     try {
       const data = await getPlayerStats(playerStatsFilter);
@@ -52,9 +52,9 @@ const StatsPage = ({ activeMenu }) => {
     } finally {
       setStatsLoading(false);
     }
-  }, [playerStatsFilter]);
-  
-  const fetchTeamStats = useCallback(async () => {
+  };
+
+  const fetchTeamStats = async () => {
     setStatsLoading(true);
     try {
       const data = await getTeamStats(teamStatsFilter);
@@ -64,7 +64,7 @@ const StatsPage = ({ activeMenu }) => {
     } finally {
       setStatsLoading(false);
     }
-  }, [teamStatsFilter]);
+  };
 
   // Render functions for game stats
   const renderGameStats = () => {
