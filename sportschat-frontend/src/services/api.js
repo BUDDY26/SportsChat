@@ -49,4 +49,37 @@ export const getCurrentUser = async () => {
     }
 };
 
+// Get game statistics
+export const getGameStats = async (filter = 'recent') => {
+  try {
+    const response = await API.get(`/api/stats/games?filter=${filter}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching game stats:', error);
+    throw error;
+  }
+};
+
+// Get player statistics
+export const getPlayerStats = async (filter = 'ppg') => {
+  try {
+    const response = await API.get(`/api/stats/players?filter=${filter}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching player stats:', error);
+    throw error;
+  }
+};
+
+// Get team statistics
+export const getTeamStats = async (filter = 'winPct') => {
+  try {
+    const response = await API.get(`/api/stats/teams?filter=${filter}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching team stats:', error);
+    throw error;
+  }
+};
+
 export default API;

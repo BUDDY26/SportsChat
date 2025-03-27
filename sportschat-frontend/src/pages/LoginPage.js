@@ -22,7 +22,7 @@ export const LoginPage = () => {
       localStorage.setItem("user", JSON.stringify(response));
       
       // Navigate to home page
-      navigate("/");
+      navigate("/dashboard")
     } catch (err) {
       console.error("Login error:", err);
       setError(err.response?.data?.message || "Login failed");
