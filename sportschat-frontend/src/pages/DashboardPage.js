@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
 import StatsPage from './StatsPage';
@@ -89,11 +89,11 @@ const DashboardPage = () => {
   }, [activeTab, isLoading]);
 
   // Fetch chat messages when a game is selected
-  useEffect(() => {
-    if (selectedGame && !isLoading) {
-      fetchChatMessages();
-    }
-  }, [selectedGame, isLoading]);
+useEffect(() => {
+  if (selectedGame && !isLoading) {
+    fetchChatMessages();
+  }
+}, [selectedGame, isLoading, fetchChatMessages]);
 
   // Handle user logout
   const handleLogout = async () => {
@@ -109,22 +109,22 @@ const DashboardPage = () => {
   };
 
   // Fetch chat messages for selected game
-  const fetchChatMessages = async () => {
-    if (!selectedGame?.id) return;
-    
-    try {
-      const response = await API.get(`/api/games/${selectedGame.id}/chat`);
-      setChatMessages(response.data);
-    } catch (err) {
-      console.error("Error fetching chat messages:", err);
-      // Use mock chat messages as fallback
-      setChatMessages([
-        { id: 1, user: "BasketballFan22", message: "Can't wait for this game!", timestamp: "2 hours ago" },
-        { id: 2, user: "HoopsDreams", message: "Should be a good match-up.", timestamp: "1 hour ago" },
-        { id: 3, user: "MarchMadnessFan", message: "What's everyone's prediction?", timestamp: "45 minutes ago" }
-      ]);
-    }
-  };
+const fetchChatMessages = useCallback(async () => {
+  if (!selectedGame?.id) return;
+  
+  try {
+    const response = await API.get(`/api/games/${selectedGame.id}/chat`);
+    setChatMessages(response.data);
+  } catch (err) {
+    console.error("Error fetching chat messages:", err);
+    // Use mock chat messages as fallback
+    setChatMessages([
+      { id: 1, user: "BasketballFan22", message: "Can't wait for this game!", timestamp: "2 hours ago" },
+      { id: 2, user: "HoopsDreams", message: "Should be a good match-up.", timestamp: "1 hour ago" },
+      { id: 3, user: "MarchMadnessFan", message: "What's everyone's prediction?", timestamp: "45 minutes ago" }
+    ]);
+  }
+}, [selectedGame]);
 
   // Handle sending a chat message
   const handleSendMessage = async (e) => {
