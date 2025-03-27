@@ -19,7 +19,7 @@ const dbConfig = {
   }
 };
 
-// Then schedule to run every 8 hours
+// Then schedule to run every 8 hours Changed to on Demand manual start up 
 //const UPDATE_INTERVAL_MS = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
 //console.log(`✔️ Update interval set to ${UPDATE_INTERVAL_MS / 3600000} hours`);
 
@@ -770,6 +770,6 @@ console.log(`Update interval set to: ${UPDATE_INTERVAL_MS / 1000} seconds (${UPD
 // Run immediately on startup
 runUpdate();
 
-// Then schedule to run every 5 minutes
+// Then schedule to run every 5 minutes changed to run on demand manual start up 
 //setInterval(runUpdate, UPDATE_INTERVAL_MS);
 console.log(`[${new Date().toISOString()}] NCAA Data Updater - Manual Execution`);
