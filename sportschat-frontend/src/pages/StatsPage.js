@@ -12,6 +12,52 @@ const StatsPage = ({ activeMenu }) => {
   const [teamStatsList, setTeamStatsList] = useState([]);
   const [statsLoading, setStatsLoading] = useState(false);
 
+  // Define fetch functions before they're used in useEffect
+  const fetchGameStats = useCallback(async () => {
+    setStatsLoading(true);
+    try {
+      const data = await getGameStats(gameStatsFilter);
+      // Ensure data is an array before setting state
+      setGameStatsList(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error fetching game stats:", err);
+      // Set to empty array on error
+      setGameStatsList([]);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, [gameStatsFilter]);
+  
+  const fetchPlayerStats = useCallback(async () => {
+    setStatsLoading(true);
+    try {
+      const data = await getPlayerStats(playerStatsFilter);
+      // Ensure data is an array before setting state
+      setPlayerStatsList(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error fetching player stats:", err);
+      // Set to empty array on error
+      setPlayerStatsList([]);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, [playerStatsFilter]);
+  
+  const fetchTeamStats = useCallback(async () => {
+    setStatsLoading(true);
+    try {
+      const data = await getTeamStats(teamStatsFilter);
+      // Ensure data is an array before setting state
+      setTeamStatsList(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error fetching team stats:", err);
+      // Set to empty array on error
+      setTeamStatsList([]);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, [teamStatsFilter]);
+
   useEffect(() => {
     if (activeMenu === "stats" && activeStatsTab === "games") {
       fetchGameStats();
@@ -30,49 +76,14 @@ const StatsPage = ({ activeMenu }) => {
     }
   }, [activeMenu, activeStatsTab, teamStatsFilter, fetchTeamStats]);
 
-  const fetchGameStats = useCallback(async () => {
-    setStatsLoading(true);
-    try {
-      const data = await getGameStats(gameStatsFilter);
-      setGameStatsList(data);
-    } catch (err) {
-      console.error("Error fetching game stats:", err);
-    } finally {
-      setStatsLoading(false);
-    }
-  }, [gameStatsFilter]);
-  
-  const fetchPlayerStats = useCallback(async () => {
-    setStatsLoading(true);
-    try {
-      const data = await getPlayerStats(playerStatsFilter);
-      setPlayerStatsList(data);
-    } catch (err) {
-      console.error("Error fetching player stats:", err);
-    } finally {
-      setStatsLoading(false);
-    }
-  }, [playerStatsFilter]);
-  
-  const fetchTeamStats = useCallback(async () => {
-    setStatsLoading(true);
-    try {
-      const data = await getTeamStats(teamStatsFilter);
-      setTeamStatsList(data);
-    } catch (err) {
-      console.error("Error fetching team stats:", err);
-    } finally {
-      setStatsLoading(false);
-    }
-  }, [teamStatsFilter]);
-
   // Render functions for game stats
   const renderGameStats = () => {
     if (statsLoading) {
       return <div className="loading-message">Loading game statistics...</div>;
     }
 
-    if (gameStatsList.length === 0) {
+    // Add safety check to ensure gameStatsList is an array
+    if (!gameStatsList || !Array.isArray(gameStatsList) || gameStatsList.length === 0) {
       return <div className="no-games-message">No game statistics available.</div>;
     }
 
@@ -141,7 +152,8 @@ const StatsPage = ({ activeMenu }) => {
       return <div className="loading-message">Loading player statistics...</div>;
     }
 
-    if (playerStatsList.length === 0) {
+    // Add safety check to ensure playerStatsList is an array
+    if (!playerStatsList || !Array.isArray(playerStatsList) || playerStatsList.length === 0) {
       return <div className="no-games-message">No player statistics available.</div>;
     }
 
@@ -212,7 +224,8 @@ const StatsPage = ({ activeMenu }) => {
       return <div className="loading-message">Loading team statistics...</div>;
     }
 
-    if (teamStatsList.length === 0) {
+    // Add safety check to ensure teamStatsList is an array
+    if (!teamStatsList || !Array.isArray(teamStatsList) || teamStatsList.length === 0) {
       return <div className="no-games-message">No team statistics available.</div>;
     }
 

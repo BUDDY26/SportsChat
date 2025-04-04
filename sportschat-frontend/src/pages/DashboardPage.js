@@ -28,6 +28,24 @@ const DashboardPage = () => {
     { id: 2, user: "BasketballExpert", message: "Who do you think will win the championship?", timestamp: "45 minutes ago" },
     { id: 3, user: "MarchMadnessFan", message: "My bracket is already busted!", timestamp: "30 minutes ago" }
   ]);
+
+  // Fetch chat messages for selected game - MOVED THIS FUNCTION DEFINITION BEFORE IT'S USED
+  const fetchChatMessages = useCallback(async () => {
+    if (!selectedGame?.id) return;
+    
+    try {
+      const response = await API.get(`/api/games/${selectedGame.id}/chat`);
+      setChatMessages(response.data);
+    } catch (err) {
+      console.error("Error fetching chat messages:", err);
+      // Use mock chat messages as fallback
+      setChatMessages([
+        { id: 1, user: "BasketballFan22", message: "Can't wait for this game!", timestamp: "2 hours ago" },
+        { id: 2, user: "HoopsDreams", message: "Should be a good match-up.", timestamp: "1 hour ago" },
+        { id: 3, user: "MarchMadnessFan", message: "What's everyone's prediction?", timestamp: "45 minutes ago" }
+      ]);
+    }
+  }, [selectedGame]);
   
   // Check if user is logged in
   useEffect(() => {
@@ -89,11 +107,11 @@ const DashboardPage = () => {
   }, [activeTab, isLoading]);
 
   // Fetch chat messages when a game is selected
-useEffect(() => {
-  if (selectedGame && !isLoading) {
-    fetchChatMessages();
-  }
-}, [selectedGame, isLoading, fetchChatMessages]);
+  useEffect(() => {
+    if (selectedGame && !isLoading) {
+      fetchChatMessages();
+    }
+  }, [selectedGame, isLoading, fetchChatMessages]);
 
   // Handle user logout
   const handleLogout = async () => {
@@ -107,24 +125,6 @@ useEffect(() => {
       navigate("/login");
     }
   };
-
-  // Fetch chat messages for selected game
-const fetchChatMessages = useCallback(async () => {
-  if (!selectedGame?.id) return;
-  
-  try {
-    const response = await API.get(`/api/games/${selectedGame.id}/chat`);
-    setChatMessages(response.data);
-  } catch (err) {
-    console.error("Error fetching chat messages:", err);
-    // Use mock chat messages as fallback
-    setChatMessages([
-      { id: 1, user: "BasketballFan22", message: "Can't wait for this game!", timestamp: "2 hours ago" },
-      { id: 2, user: "HoopsDreams", message: "Should be a good match-up.", timestamp: "1 hour ago" },
-      { id: 3, user: "MarchMadnessFan", message: "What's everyone's prediction?", timestamp: "45 minutes ago" }
-    ]);
-  }
-}, [selectedGame]);
 
   // Handle sending a chat message
   const handleSendMessage = async (e) => {
