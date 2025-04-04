@@ -44,6 +44,15 @@ app.use(cors({
         : 'http://localhost:3000',
     credentials: true
 }));
+
+// Disable caching for API routes to ensure fresh data
+app.use('/api', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.setHeader('Expires', '0');
+  res.setHeader('Pragma', 'no-cache');
+  next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
@@ -201,6 +210,8 @@ app.get("/", (req, res) => {
 // Get upcoming games - games that haven't been played yet
 app.get('/api/games/upcoming', async (req, res) => {
   try {
+    console.log('Fetching upcoming games...');
+    
     const result = await sql.query`
       SELECT 
         g.GameID as id,
@@ -210,13 +221,17 @@ app.get('/api/games/upcoming', async (req, res) => {
         g.Team2ID as team2Id,
         g.DatePlayed as gameDate,
         g.Round as round,
-        g.Location as location
-      FROM Games g
-      JOIN Teams t1 ON g.Team1ID = t1.TeamID
-      JOIN Teams t2 ON g.Team2ID = t2.TeamID
-      WHERE g.DatePlayed > GETDATE()
+        g.Location as location,
+        g.LastUpdated as lastUpdated
+      FROM Games g WITH (NOLOCK)
+      JOIN Teams t1 WITH (NOLOCK) ON g.Team1ID = t1.TeamID
+      JOIN Teams t2 WITH (NOLOCK) ON g.Team2ID = t2.TeamID
+      WHERE g.ScoreTeam1 = 0 AND g.ScoreTeam2 = 0
+        AND g.DatePlayed > GETDATE()
       ORDER BY g.DatePlayed ASC
     `;
+    
+    console.log(`Found ${result.recordset.length} upcoming games`);
     
     // Format the response to match the frontend expectations
     const formattedGames = result.recordset.map(game => ({
@@ -225,10 +240,16 @@ app.get('/api/games/upcoming', async (req, res) => {
       team2: game.team2,
       team1Id: game.team1Id,
       team2Id: game.team2Id,
-      time: new Date(game.gameDate).toLocaleString(),
+      time: new Date(game.gameDate).toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+      }),
       round: game.round,
       location: game.location,
-      spread: "TBD" // Spread isn't in your DB, so we use a placeholder
+      spread: "TBD", // Spread isn't in your DB, so we use a placeholder
+      lastUpdated: game.lastUpdated
     }));
     
     res.json(formattedGames);
@@ -238,10 +259,10 @@ app.get('/api/games/upcoming', async (req, res) => {
   }
 });
 
-// Get live games - games happening today that don't have a winner yet
+// Get live games - games that have scores but no winner yet
 app.get('/api/games/live', async (req, res) => {
   try {
-    const today = new Date().toISOString().split('T')[0]; // Get current date in 'YYYY-MM-DD' format
+    console.log('Fetching live games...');
     
     const result = await sql.query`
       SELECT 
@@ -254,14 +275,17 @@ app.get('/api/games/live', async (req, res) => {
         g.Round as round,
         g.Location as location,
         g.ScoreTeam1 as score1,
-        g.ScoreTeam2 as score2
-      FROM Games g
-      JOIN Teams t1 ON g.Team1ID = t1.TeamID
-      JOIN Teams t2 ON g.Team2ID = t2.TeamID
-      WHERE CONVERT(date, g.DatePlayed) = ${today} 
-        AND g.WinnerID IS NULL 
+        g.ScoreTeam2 as score2,
+        g.LastUpdated as lastUpdated
+      FROM Games g WITH (NOLOCK)
+      JOIN Teams t1 WITH (NOLOCK) ON g.Team1ID = t1.TeamID
+      JOIN Teams t2 WITH (NOLOCK) ON g.Team2ID = t2.TeamID
+      WHERE g.ScoreTeam1 > 0 AND g.ScoreTeam2 > 0 
+        AND g.WinnerID IS NULL
       ORDER BY g.LastUpdated DESC
     `;
+    
+    console.log(`Found ${result.recordset.length} live games`);
     
     // Format the response to match the frontend expectations
     const formattedGames = result.recordset.map(game => ({
@@ -275,7 +299,8 @@ app.get('/api/games/live', async (req, res) => {
       location: game.location,
       score1: game.score1 || 0,
       score2: game.score2 || 0,
-      quarter: 'In Progress'
+      quarter: 'In Progress',
+      lastUpdated: game.lastUpdated
     }));
     
     res.json(formattedGames);
@@ -288,6 +313,8 @@ app.get('/api/games/live', async (req, res) => {
 // Get recent games - completed games with a winner
 app.get('/api/games/recent', async (req, res) => {
   try {
+    console.log('Fetching recent games...');
+    
     const result = await sql.query`
       SELECT TOP 10
         g.GameID as id,
@@ -300,14 +327,16 @@ app.get('/api/games/recent', async (req, res) => {
         g.Location as location,
         g.ScoreTeam1 as score1,
         g.ScoreTeam2 as score2,
-        winner.TeamName as winnerName
-      FROM Games g
-      JOIN Teams t1 ON g.Team1ID = t1.TeamID
-      JOIN Teams t2 ON g.Team2ID = t2.TeamID
-      LEFT JOIN Teams winner ON g.WinnerID = winner.TeamID
+        CASE WHEN g.WinnerID = t1.TeamID THEN t1.TeamName ELSE t2.TeamName END as winnerName,
+        g.LastUpdated as lastUpdated
+      FROM Games g WITH (NOLOCK)
+      JOIN Teams t1 WITH (NOLOCK) ON g.Team1ID = t1.TeamID
+      JOIN Teams t2 WITH (NOLOCK) ON g.Team2ID = t2.TeamID
       WHERE g.WinnerID IS NOT NULL
-      ORDER BY g.DatePlayed DESC
+      ORDER BY g.LastUpdated DESC, g.DatePlayed DESC
     `;
+    
+    console.log(`Found ${result.recordset.length} recent games`);
     
     // Format the response to match the frontend expectations
     const formattedGames = result.recordset.map(game => ({
@@ -321,7 +350,8 @@ app.get('/api/games/recent', async (req, res) => {
       location: game.location,
       score1: game.score1 || 0,
       score2: game.score2 || 0,
-      winner: game.winnerName
+      winner: game.winnerName,
+      lastUpdated: game.lastUpdated
     }));
     
     res.json(formattedGames);

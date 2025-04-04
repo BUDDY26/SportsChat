@@ -20,6 +20,7 @@ const DashboardPage = () => {
   const [games, setGames] = useState([]);
   const [gamesLoading, setGamesLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastRefreshTime, setLastRefreshTime] = useState(null);
   
   // Global chat state
   const [globalChatMessage, setGlobalChatMessage] = useState("");
@@ -29,7 +30,7 @@ const DashboardPage = () => {
     { id: 3, user: "MarchMadnessFan", message: "My bracket is already busted!", timestamp: "30 minutes ago" }
   ]);
 
-  // Fetch chat messages for selected game - MOVED THIS FUNCTION DEFINITION BEFORE IT'S USED
+  // Fetch chat messages for selected game
   const fetchChatMessages = useCallback(async () => {
     if (!selectedGame?.id) return;
     
@@ -68,43 +69,55 @@ const DashboardPage = () => {
     setIsLoading(false);
   }, [navigate]);
 
-  // Fetch games based on active tab
+  // Fetch games function
+  const fetchGames = useCallback(async () => {
+    setGamesLoading(true);
+    setError(null);
+    
+    try {
+      let endpoint;
+      
+      switch (activeTab) {
+        case "live":
+          endpoint = '/api/games/live';
+          break;
+        case "recent":
+          endpoint = '/api/games/recent';
+          break;
+        default:
+          endpoint = '/api/games/upcoming';
+          break;
+      }
+      
+      // Add timestamp to prevent caching
+      const timestamp = new Date().getTime();
+      console.log(`Fetching ${activeTab} games from ${endpoint}?_t=${timestamp}...`);
+      
+      const response = await API.get(`${endpoint}?_t=${timestamp}`);
+      console.log(`Received ${response.data.length} ${activeTab} games`);
+      
+      if (Array.isArray(response.data)) {
+        setGames(response.data);
+        setLastRefreshTime(new Date());
+      } else {
+        console.error('API returned non-array data:', response.data);
+        setGames([]);
+      }
+    } catch (err) {
+      console.error(`Error fetching ${activeTab} games:`, err);
+      setError(`Failed to load ${activeTab} games. Please try again.`);
+      // Use fallback mock data for development
+      setGames(getMockGames(activeTab));
+    } finally {
+      setGamesLoading(false);
+    }
+  }, [activeTab]);
+
+  // Fetch games when active tab changes
   useEffect(() => {
     if (isLoading) return;
-    
-    const fetchGames = async () => {
-      setGamesLoading(true);
-      setError(null);
-      
-      try {
-        let endpoint;
-        
-        switch (activeTab) {
-          case "live":
-            endpoint = '/api/games/live';
-            break;
-          case "recent":
-            endpoint = '/api/games/recent';
-            break;
-          default:
-            endpoint = '/api/games/upcoming';
-            break;
-        }
-        
-        const response = await API.get(endpoint);
-        setGames(response.data);
-      } catch (err) {
-        console.error(`Error fetching ${activeTab} games:`, err);
-        setError(`Failed to load ${activeTab} games. Please try again.`);
-        // Use fallback mock data for development
-        setGames(getMockGames(activeTab));
-      } finally {
-        setGamesLoading(false);
-      }
-    };
-    
     fetchGames();
-  }, [activeTab, isLoading]);
+  }, [activeTab, isLoading, fetchGames]);
 
   // Fetch chat messages when a game is selected
   useEffect(() => {
@@ -178,7 +191,9 @@ const DashboardPage = () => {
   // Handle game selection
   const handleGameClick = async (game) => {
     try {
-      const response = await API.get(`/api/games/${game.id}`);
+      // Add timestamp to prevent caching
+      const timestamp = new Date().getTime();
+      const response = await API.get(`/api/games/${game.id}?_t=${timestamp}`);
       setSelectedGame(response.data);
     } catch (err) {
       console.error("Error fetching game details:", err);
@@ -198,6 +213,11 @@ const DashboardPage = () => {
       console.error("Error placing bet:", err);
       alert(err.response?.data?.message || "Failed to place bet. Please try again.");
     }
+  };
+
+  // Handle manual refresh
+  const handleManualRefresh = () => {
+    fetchGames();
   };
 
   // Mock data for development/fallback
@@ -320,7 +340,21 @@ const DashboardPage = () => {
                 >
                   Recent
                 </div>
+                <button 
+                  className="refresh-button" 
+                  onClick={handleManualRefresh}
+                  disabled={gamesLoading}
+                >
+                  {gamesLoading ? 'Refreshing...' : 'Refresh'}
+                </button>
               </div>
+
+              {/* Last refresh time */}
+              {lastRefreshTime && (
+                <div className="last-updated">
+                  Last updated: {lastRefreshTime.toLocaleTimeString()}
+                </div>
+              )}
 
               {/* Games List */}
               <div className="games-list">
