@@ -37,12 +37,11 @@ async function connectDB() {
 }
 connectDB();
 
-// Middleware
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production' 
-        ? 'https://sportschatplus.azurewebsites.net'  // Your Azure app URL
-        : 'http://localhost:3000',
-    credentials: true
+  origin: process.env.NODE_ENV === 'production' 
+      ? 'https://sportschatplus-ehfub6gedrhyfmbt.centralus-01.azurewebsites.net'
+      : 'http://localhost:3000',
+  credentials: true
 }));
 
 // Disable caching for API routes to ensure fresh data
@@ -61,6 +60,11 @@ app.use(session({
     saveUninitialized: true,
     cookie: { secure: false }
 }));
+
+// Health check endpoint for Azure
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
 
 // User Signup Route
 app.post('/signup', async (req, res) => {
