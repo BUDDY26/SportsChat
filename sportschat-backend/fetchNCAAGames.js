@@ -742,7 +742,7 @@ async function runUpdate() {
     const afterCount = await displayGameCount();
     
     console.log(`\n[${new Date().toISOString()}] Added ${afterCount - beforeCount} new games to the database`);
-    console.log(`Next update scheduled for: ${new Date(Date.now() + UPDATE_INTERVAL_MS).toISOString()}`);
+    //console.log(`Next update scheduled for: ${new Date(Date.now() + UPDATE_INTERVAL_MS).toISOString()}`);
   } catch (error) {
     console.error(`[${new Date().toISOString()}] Error in scheduled update:`, error);
   }
