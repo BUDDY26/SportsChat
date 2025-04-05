@@ -953,3 +953,245 @@
 .stats-table tr:last-child td {
   border-bottom: none;
 }
+
+/* Teams Page Layout */
+.teams-page {
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto;
+  background-color: transparent;
+}
+
+.teams-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.refresh-button {
+  padding: 0.5rem 1rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.refresh-button:hover {
+  background-color: #0069d9;
+}
+
+.refresh-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.last-updated {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.teams-content {
+  display: flex;
+  height: calc(100% - 50px);
+  gap: 1.5rem;
+}
+
+/* Teams List */
+.teams-list {
+  flex: 0 0 300px;
+  border-right: 1px solid #e0e0e0;
+  overflow-y: auto;
+  padding-right: 1rem;
+}
+
+.teams-count {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.teams-list-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.team-item {
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.team-item:hover {
+  border-color: #007bff;
+  background-color: #f8f9fa;
+}
+
+.team-item.selected {
+  border-color: #007bff;
+  background-color: #e6f2ff;
+}
+
+.team-name {
+  font-weight: bold;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.team-conference {
+  font-size: 0.85rem;
+  color: #555;
+  margin-bottom: 0.25rem;
+}
+
+.team-seed {
+  font-size: 0.8rem;
+  color: #777;
+  font-style: italic;
+}
+
+/* Team Details */
+.team-details {
+  flex: 1;
+  overflow-y: auto;
+  padding-left: 1rem;
+}
+
+.team-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.team-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.team-seed-badge {
+  background-color: #007bff;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+}
+
+.team-info-section {
+  margin-bottom: 2rem;
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 4px;
+}
+
+.info-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.team-players-section,
+.team-games-section {
+  margin-bottom: 2rem;
+}
+
+.team-players-section h4,
+.team-games-section h4 {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 0.5rem;
+}
+
+.players-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.player-item {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 0.75rem;
+}
+
+.games-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.game-item {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 0.75rem;
+}
+
+.game-teams {
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.game-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #555;
+  margin-bottom: 0.25rem;
+}
+
+.game-score {
+  font-size: 0.9rem;
+}
+
+.game-result {
+  font-weight: bold;
+  margin-left: 0.5rem;
+}
+
+.no-team-selected,
+.no-players-message,
+.no-games-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+  border: 1px dashed #ccc;
+  border-radius: 4px;
+  color: #777;
+  font-style: italic;
+}
+
+/* Responsive adjustments for Teams page */
+@media (max-width: 992px) {
+  .teams-content {
+    flex-direction: column;
+  }
+  
+  .teams-list {
+    flex: none;
+    width: 100%;
+    padding-right: 0;
+    padding-bottom: 1rem;
+    border-right: none;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .team-details {
+    padding-left: 0;
+    padding-top: 1rem;
+  }
+}

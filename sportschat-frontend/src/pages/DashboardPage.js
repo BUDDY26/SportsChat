@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
 import StatsPage from './StatsPage';
+import TeamsPage from './TeamsPage';
 import "./style.css";
 
 const DashboardPage = () => {
@@ -410,11 +411,10 @@ const DashboardPage = () => {
             </div>
           )}
 
-          {/* Placeholder for Teams View */}
+          {/* Teams View */}
           {activeMenu === "teams" && (
-            <div className="main-content placeholder-content">
-              <h2>Teams</h2>
-              <p>Team information will be displayed here.</p>
+            <div className="main-content">
+              <TeamsPage />
             </div>
           )}
           
