@@ -6,6 +6,8 @@ const session = require('express-session');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+
 
 dotenv.config();
 const app = express();
@@ -795,10 +797,33 @@ app.get('/api/bracket', async (req, res) => {
   }
 });
 
-app.use(express.static(path.join(__dirname, '../sportschat-frontend/build')));
+// Determine frontend path based on environment
+let frontendPath;
+if (process.env.NODE_ENV === 'production') {
+  console.log('Running in production mode');
+  console.log('Current directory:', __dirname);
+  
+  // Try the standard path first
+  const standardPath = path.join(__dirname, '../sportschat-frontend/build');
+  if (fs.existsSync(standardPath)) {
+    frontendPath = standardPath;
+    console.log('Using standard frontend path:', frontendPath);
+  } else {
+    // If standard path doesn't exist, try alternative Azure path
+    frontendPath = path.join(process.cwd(), 'sportschat-frontend/build');
+    console.log('Using alternative frontend path:', frontendPath);
+  }
+} else {
+  // Local development path
+  frontendPath = path.join(__dirname, '../sportschat-frontend/build');
+}
 
+// Serve static files
+app.use(express.static(frontendPath));
+
+// Handle client-side routing - serve index.html for all non-API routes
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../sportschat-frontend/build/index.html'));
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 // Start Server
