@@ -208,9 +208,9 @@ app.get('/api/test-database', async (req, res) => {
   });
 
 // Root Route
-app.get("/", (req, res) => {
-    res.send("SportsChat Backend is Running!");
-});
+//app.get("/", (req, res) => {
+    //res.send("SportsChat Backend is Running!");
+//});
 
 // March Madness API Routes to DashBoard
 // Get upcoming games - games that haven't been played yet
