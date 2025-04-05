@@ -2,8 +2,10 @@ import axios from 'axios';
 
 // Set up the API instance with base URL and credentials enabled
 const API = axios.create({
-    baseURL: 'http://localhost:5000',  // This must match the backend server URL
-    withCredentials: true, // Allows cookies to be sent for session authentication
+  baseURL: process.env.NODE_ENV === 'production' 
+      ? '' // Empty string for relative URLs in production
+      : 'http://localhost:5000',  // Use localhost for development
+  withCredentials: true, // Allows cookies to be sent for session authentication
 });
 
 // Function to handle user signup
