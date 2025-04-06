@@ -776,5 +776,3 @@ runUpdate();
 // setInterval(runUpdate, UPDATE_INTERVAL_MS);
 
 console.log(`[${new Date().toISOString()}] NCAA Data Updater - Manual Execution`);
-
-
