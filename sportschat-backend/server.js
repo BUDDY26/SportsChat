@@ -265,13 +265,10 @@ app.get('/api/games/upcoming', async (req, res) => {
   }
 });
 
-// Get live games - games that have scores but no winner yet AND scheduled for today
+// Get live games - games that have scores but no winner yet
 app.get('/api/games/live', async (req, res) => {
   try {
     console.log('Fetching live games...');
-    
-    // Get today's date in SQL-friendly format
-    const today = new Date().toISOString().split('T')[0];
     
     const result = await sql.query`
       SELECT 
@@ -291,7 +288,6 @@ app.get('/api/games/live', async (req, res) => {
       JOIN Teams t2 WITH (NOLOCK) ON g.Team2ID = t2.TeamID
       WHERE g.ScoreTeam1 > 0 AND g.ScoreTeam2 > 0 
         AND g.WinnerID IS NULL
-        AND CONVERT(date, g.DatePlayed) = ${today}
       ORDER BY g.LastUpdated DESC
     `;
     
