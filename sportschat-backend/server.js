@@ -821,6 +821,219 @@ if (process.env.NODE_ENV === 'production') {
 // Serve static files
 app.use(express.static(frontendPath));
 
+// STATS ROUTES
+
+// GET game stats based on filter: highScoring, closeGames, blowouts, or recent 
+app.get('/api/stats/games', async (req, res) => {
+  const filter = req.query.filter || 'recent';
+  let query;
+
+  switch (filter) {
+    case 'highScoring':
+      query = `
+        SELECT TOP 10 
+          g.GameID as id, 
+          t1.TeamName as team1, 
+          t2.TeamName as team2, 
+          g.ScoreTeam1 as score1, 
+          g.ScoreTeam2 as score2, 
+          g.Round as round,
+          g.DatePlayed as date,
+          (g.ScoreTeam1 + g.ScoreTeam2) as totalScore
+        FROM Games g
+        JOIN Teams t1 ON g.Team1ID = t1.TeamID
+        JOIN Teams t2 ON g.Team2ID = t2.TeamID
+        WHERE g.ScoreTeam1 IS NOT NULL AND g.ScoreTeam2 IS NOT NULL
+        ORDER BY totalScore DESC
+      `;
+      break;
+    case 'closeGames':
+      query = `
+        SELECT TOP 10 
+          g.GameID as id, 
+          t1.TeamName as team1, 
+          t2.TeamName as team2, 
+          g.ScoreTeam1 as score1, 
+          g.ScoreTeam2 as score2, 
+          g.Round as round,
+          g.DatePlayed as date,
+          ABS(g.ScoreTeam1 - g.ScoreTeam2) as scoreDiff
+        FROM Games g
+        JOIN Teams t1 ON g.Team1ID = t1.TeamID
+        JOIN Teams t2 ON g.Team2ID = t2.TeamID
+        WHERE g.ScoreTeam1 IS NOT NULL AND g.ScoreTeam2 IS NOT NULL
+        ORDER BY scoreDiff ASC
+      `;
+      break;
+    case 'blowouts':
+      query = `
+        SELECT TOP 10 
+          g.GameID as id, 
+          t1.TeamName as team1, 
+          t2.TeamName as team2, 
+          g.ScoreTeam1 as score1, 
+          g.ScoreTeam2 as score2, 
+          g.Round as round,
+          g.DatePlayed as date,
+          ABS(g.ScoreTeam1 - g.ScoreTeam2) as scoreDiff
+        FROM Games g
+        JOIN Teams t1 ON g.Team1ID = t1.TeamID
+        JOIN Teams t2 ON g.Team2ID = t2.TeamID
+        WHERE g.ScoreTeam1 IS NOT NULL AND g.ScoreTeam2 IS NOT NULL
+        ORDER BY scoreDiff DESC
+      `;
+      break;
+    case 'recent':
+    default:
+      query = `
+        SELECT TOP 10 
+          g.GameID as id, 
+          t1.TeamName as team1, 
+          t2.TeamName as team2, 
+          g.ScoreTeam1 as score1, 
+          g.ScoreTeam2 as score2, 
+          g.Round as round,
+          g.DatePlayed as date
+        FROM Games g
+        JOIN Teams t1 ON g.Team1ID = t1.TeamID
+        JOIN Teams t2 ON g.Team2ID = t2.TeamID
+        WHERE g.ScoreTeam1 IS NOT NULL AND g.ScoreTeam2 IS NOT NULL
+        ORDER BY g.DatePlayed DESC
+      `;
+      break;
+  }
+
+  try {
+    const result = await sql.query(query);
+    res.json(result.recordset);
+  } catch (err) {
+    console.error('Error fetching game stats:', err);
+    res.status(500).json({ message: 'Failed to fetch game stats' });
+  }
+});
+
+// GET player stats by filter: ppg, rpg, or apg
+app.get('/api/stats/players', async (req, res) => {
+  const filter = req.query.filter || 'ppg';
+  let orderByColumn;
+
+  switch (filter) {
+    case 'rpg':
+      orderByColumn = 'AVG(gs.Rebounds)';
+      break;
+    case 'apg':
+      orderByColumn = 'AVG(gs.Assists)';
+      break;
+    case 'ppg':
+    default:
+      orderByColumn = 'AVG(gs.Points)';
+      break;
+  }
+
+  const query = `
+    SELECT TOP 10 
+      p.PlayerID AS id,
+      p.PlayerName AS name,
+      p.Position AS position,
+      t.TeamName AS team,
+      CAST(AVG(gs.Points) AS DECIMAL(4,1)) AS ppg,
+      CAST(AVG(gs.Rebounds) AS DECIMAL(4,1)) AS rpg,
+      CAST(AVG(gs.Assists) AS DECIMAL(4,1)) AS apg
+    FROM Players p
+    JOIN GameStats gs ON p.PlayerID = gs.PlayerID
+    JOIN Teams t ON p.TeamID = t.TeamID
+    GROUP BY p.PlayerID, p.PlayerName, p.Position, t.TeamName
+    ORDER BY ${orderByColumn} DESC
+  `;
+
+  try {
+    const result = await sql.query(query);
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("Error fetching player stats:", err);
+    res.status(500).json({ message: "Failed to fetch player stats" });
+  }
+});
+
+// GET team stats by filter: winPct, ppg, or differential
+app.get('/api/stats/teams', async (req, res) => {
+  const filter = req.query.filter || 'winPct';
+
+  let orderByColumn;
+  switch (filter) {
+    case 'ppg':
+      orderByColumn = `
+        AVG(CASE 
+          WHEN t.TeamID = g.Team1ID THEN g.ScoreTeam1 
+          WHEN t.TeamID = g.Team2ID THEN g.ScoreTeam2 
+        END)
+      `;
+      break;
+    case 'differential':
+      orderByColumn = `
+        AVG(CASE 
+          WHEN t.TeamID = g.Team1ID THEN g.ScoreTeam1 - g.ScoreTeam2 
+          WHEN t.TeamID = g.Team2ID THEN g.ScoreTeam2 - g.ScoreTeam1 
+        END)
+      `;
+      break;
+    case 'winPct':
+    default:
+      orderByColumn = `
+        1.0 * SUM(CASE 
+          WHEN (t.TeamID = g.Team1ID AND g.ScoreTeam1 > g.ScoreTeam2) 
+            OR (t.TeamID = g.Team2ID AND g.ScoreTeam2 > g.ScoreTeam1) 
+          THEN 1 ELSE 0 END) / COUNT(*)
+      `;
+      break;
+  }
+
+  const query = `
+    SELECT 
+      t.TeamID AS id,
+      t.TeamName AS name,
+      COUNT(*) AS gamesPlayed,
+      SUM(CASE 
+        WHEN (t.TeamID = g.Team1ID AND g.ScoreTeam1 > g.ScoreTeam2) 
+          OR (t.TeamID = g.Team2ID AND g.ScoreTeam2 > g.ScoreTeam1) 
+        THEN 1 ELSE 0 END) AS wins,
+      SUM(CASE 
+        WHEN (t.TeamID = g.Team1ID AND g.ScoreTeam1 < g.ScoreTeam2) 
+          OR (t.TeamID = g.Team2ID AND g.ScoreTeam2 < g.ScoreTeam1) 
+        THEN 1 ELSE 0 END) AS losses,
+      CAST(SUM(CASE 
+        WHEN (t.TeamID = g.Team1ID AND g.ScoreTeam1 > g.ScoreTeam2) 
+          OR (t.TeamID = g.Team2ID AND g.ScoreTeam2 > g.ScoreTeam1) 
+        THEN 1 ELSE 0 END) * 1.0 / COUNT(*) AS DECIMAL(4, 3)) AS winPct,
+      CAST(AVG(CASE 
+        WHEN t.TeamID = g.Team1ID THEN g.ScoreTeam1 
+        WHEN t.TeamID = g.Team2ID THEN g.ScoreTeam2 
+      END) AS DECIMAL(4,1)) AS ppg,
+      CAST(AVG(CASE 
+        WHEN t.TeamID = g.Team1ID THEN g.ScoreTeam2 
+        WHEN t.TeamID = g.Team2ID THEN g.ScoreTeam1 
+      END) AS DECIMAL(4,1)) AS oppg,
+      CAST(AVG(CASE 
+        WHEN t.TeamID = g.Team1ID THEN g.ScoreTeam1 - g.ScoreTeam2 
+        WHEN t.TeamID = g.Team2ID THEN g.ScoreTeam2 - g.ScoreTeam1 
+      END) AS DECIMAL(4,1)) AS differential
+    FROM Teams t
+    JOIN Games g ON t.TeamID = g.Team1ID OR t.TeamID = g.Team2ID
+    WHERE g.ScoreTeam1 IS NOT NULL AND g.ScoreTeam2 IS NOT NULL
+    GROUP BY t.TeamID, t.TeamName
+    ORDER BY ${orderByColumn} DESC
+  `;
+
+  try {
+    const result = await sql.query(query);
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("Error fetching team stats:", err);
+    res.status(500).json({ message: "Failed to fetch team stats" });
+  }
+});
+
+
 // Handle client-side routing - serve index.html for all non-API routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(frontendPath, 'index.html'));
