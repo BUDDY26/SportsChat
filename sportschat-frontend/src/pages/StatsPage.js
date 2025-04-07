@@ -2,15 +2,23 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { getGameStats, getPlayerStats, getTeamStats } from "../services/api";
 
 const StatsPage = ({ activeMenu }) => {
+  // State to track which tab is currently active
   const [activeStatsTab, setActiveStatsTab] = useState("games");
+
+  // Filters for each type of stat
   const [gameStatsFilter, setGameStatsFilter] = useState("highScoring");
   const [playerStatsFilter, setPlayerStatsFilter] = useState("ppg");
   const [teamStatsFilter, setTeamStatsFilter] = useState("winPct");
+
+  // Data arrays to hold the fetched statistics
   const [gameStatsList, setGameStatsList] = useState([]);
   const [playerStatsList, setPlayerStatsList] = useState([]);
   const [teamStatsList, setTeamStatsList] = useState([]);
+
+  // Loading indicator
   const [statsLoading, setStatsLoading] = useState(false);
 
+  // Fetch game stats based on filter
   const fetchGameStats = useCallback(async () => {
     setStatsLoading(true);
     try {
@@ -24,6 +32,7 @@ const StatsPage = ({ activeMenu }) => {
     }
   }, [gameStatsFilter]);
 
+  // Fetch player stats based on filter
   const fetchPlayerStats = useCallback(async () => {
     setStatsLoading(true);
     try {
@@ -37,6 +46,7 @@ const StatsPage = ({ activeMenu }) => {
     }
   }, [playerStatsFilter]);
 
+  // Fetch team stats based on filter
   const fetchTeamStats = useCallback(async () => {
     setStatsLoading(true);
     try {
@@ -50,6 +60,7 @@ const StatsPage = ({ activeMenu }) => {
     }
   }, [teamStatsFilter]);
 
+  // Automatically fetch stats when tab or filter changes
   useEffect(() => {
     if (activeMenu === "stats" && activeStatsTab === "games") {
       fetchGameStats();
@@ -68,6 +79,7 @@ const StatsPage = ({ activeMenu }) => {
     }
   }, [activeMenu, activeStatsTab, teamStatsFilter, fetchTeamStats]);
 
+  // Render game stats table based on filter
   const renderGameStats = () => {
     if (statsLoading) return <div className="loading-message">Loading game statistics...</div>;
     if (!Array.isArray(gameStatsList) || gameStatsList.length === 0) return <div className="no-games-message">No game statistics available.</div>;
@@ -75,6 +87,7 @@ const StatsPage = ({ activeMenu }) => {
     return (
       <div className="game-stats-container">
         <div className="filter-controls">
+          {/* Game stat filter buttons */}
           <button className={`filter-button ${gameStatsFilter === 'highScoring' ? 'active' : ''}`} onClick={() => setGameStatsFilter('highScoring')}>Highest Scoring</button>
           <button className={`filter-button ${gameStatsFilter === 'closeGames' ? 'active' : ''}`} onClick={() => setGameStatsFilter('closeGames')}>Closest Games</button>
           <button className={`filter-button ${gameStatsFilter === 'blowouts' ? 'active' : ''}`} onClick={() => setGameStatsFilter('blowouts')}>Biggest Blowouts</button>
@@ -87,6 +100,7 @@ const StatsPage = ({ activeMenu }) => {
                 <th>Matchup</th>
                 <th>Date</th>
                 <th>Score</th>
+                {/* Conditionally show column depending on stat filter */}
                 {gameStatsFilter === 'highScoring' && <th>Total Score</th>}
                 {(gameStatsFilter === 'closeGames' || gameStatsFilter === 'blowouts') && <th>Margin</th>}
               </tr>
@@ -109,6 +123,7 @@ const StatsPage = ({ activeMenu }) => {
     );
   };
 
+  // Render player stats table based on filter
   const renderPlayerStats = () => {
     if (statsLoading) return <div className="loading-message">Loading player statistics...</div>;
     if (!Array.isArray(playerStatsList) || playerStatsList.length === 0) return <div className="no-games-message">No player statistics available.</div>;
@@ -116,6 +131,7 @@ const StatsPage = ({ activeMenu }) => {
     return (
       <div className="player-stats-container">
         <div className="filter-controls">
+          {/* Player stat filter buttons */}
           <button className={`filter-button ${playerStatsFilter === 'ppg' ? 'active' : ''}`} onClick={() => setPlayerStatsFilter('ppg')}>Points Per Game</button>
           <button className={`filter-button ${playerStatsFilter === 'rpg' ? 'active' : ''}`} onClick={() => setPlayerStatsFilter('rpg')}>Rebounds Per Game</button>
           <button className={`filter-button ${playerStatsFilter === 'apg' ? 'active' : ''}`} onClick={() => setPlayerStatsFilter('apg')}>Assists Per Game</button>
@@ -128,6 +144,7 @@ const StatsPage = ({ activeMenu }) => {
                 <th>Player</th>
                 <th>Team</th>
                 <th>Position</th>
+                {/* Conditionally show stat column */}
                 {playerStatsFilter === 'ppg' && <th>PPG</th>}
                 {playerStatsFilter === 'rpg' && <th>RPG</th>}
                 {playerStatsFilter === 'apg' && <th>APG</th>}
@@ -152,6 +169,7 @@ const StatsPage = ({ activeMenu }) => {
     );
   };
 
+  // Render team stats table based on filter
   const renderTeamStats = () => {
     if (statsLoading) return <div className="loading-message">Loading team statistics...</div>;
     if (!Array.isArray(teamStatsList) || teamStatsList.length === 0) return <div className="no-games-message">No team statistics available.</div>;
@@ -159,6 +177,7 @@ const StatsPage = ({ activeMenu }) => {
     return (
       <div className="team-stats-container">
         <div className="filter-controls">
+          {/* Team stat filter buttons */}
           <button className={`filter-button ${teamStatsFilter === 'winPct' ? 'active' : ''}`} onClick={() => setTeamStatsFilter('winPct')}>Win Percentage</button>
           <button className={`filter-button ${teamStatsFilter === 'ppg' ? 'active' : ''}`} onClick={() => setTeamStatsFilter('ppg')}>Points Per Game</button>
           <button className={`filter-button ${teamStatsFilter === 'differential' ? 'active' : ''}`} onClick={() => setTeamStatsFilter('differential')}>Point Differential</button>
@@ -169,6 +188,7 @@ const StatsPage = ({ activeMenu }) => {
               <tr>
                 <th></th>
                 <th>Team</th>
+                {/* Conditionally show stat columns */}
                 {teamStatsFilter === 'winPct' && <><th>W-L</th><th>Win %</th></>}
                 {teamStatsFilter === 'ppg' && <th>PPG</th>}
                 {teamStatsFilter === 'differential' && <th>Diff</th>}
@@ -197,11 +217,15 @@ const StatsPage = ({ activeMenu }) => {
         <h2>Tournament Statistics</h2>
         <p>View detailed statistics for games, players, and teams.</p>
       </div>
+
+      {/* Tabs to switch between stat types */}
       <div className="stats-tabs">
         <div className={`stats-tab ${activeStatsTab === 'games' ? 'active' : ''}`} onClick={() => setActiveStatsTab('games')}>Games</div>
         <div className={`stats-tab ${activeStatsTab === 'players' ? 'active' : ''}`} onClick={() => setActiveStatsTab('players')}>Players</div>
         <div className={`stats-tab ${activeStatsTab === 'teams' ? 'active' : ''}`} onClick={() => setActiveStatsTab('teams')}>Teams</div>
       </div>
+
+      {/* Render appropriate table based on selected tab */}
       <div className="stats-content">
         {activeStatsTab === 'games' && renderGameStats()}
         {activeStatsTab === 'players' && renderPlayerStats()}
