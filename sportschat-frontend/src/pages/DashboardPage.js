@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef} from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
 import StatsPage from './StatsPage';
@@ -93,8 +93,8 @@ const DashboardPage = () => {
 
 // Auto-scroll effect for global chat
 useEffect(() => {
-  if (globalChatContainerRef.current && activeMenu === "chat") {
-    globalChatContainerRef.current.scrollTop = globalChatContainerRef.current.scrollHeight;
+  if ((useRef(null)).current && activeMenu === "chat") {
+    (useRef(null)).current.scrollTop = (useRef(null)).current.scrollHeight;
   }
 }, [globalChatMessages, activeMenu]);
 
