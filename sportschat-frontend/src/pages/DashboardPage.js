@@ -11,9 +11,6 @@ const DashboardPage = () => {
   // User state
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastGlobalChatRefreshTime, setLastGlobalChatRefreshTime] = useState(null);
-  const globalChatContainerRef = useRef(null);
   
   // March Madness state
   const [selectedGame, setSelectedGame] = useState(null);
@@ -72,31 +69,6 @@ const DashboardPage = () => {
     
     setIsLoading(false);
   }, [navigate]);
-
-  // Auto-refresh effect for global chat
-  useEffect(() => {
-    let globalChatInterval;
-  
-    if (activeMenu === "chat" && !isLoading) {
-      fetchGlobalChatMessages();
-    
-      // Refresh global chat every 10 seconds when active
-      globalChatInterval = setInterval(() => {
-        fetchGlobalChatMessages();
-      }, 10000);
-    }
-  
-    return () => {
-      if (globalChatInterval) clearInterval(globalChatInterval);
-    };
-  }, [activeMenu, isLoading, fetchGlobalChatMessages]);
-
-// Auto-scroll effect for global chat
-useEffect(() => {
-  if (globalChatContainerRef.current && activeMenu === "chat") {
-    globalChatContainerRef.current.scrollTop = globalChatContainerRef.current.scrollHeight;
-  }
-}, [globalChatMessages, activeMenu]);
 
   // Fetch games function
   const fetchGames = useCallback(async () => {
@@ -198,89 +170,23 @@ useEffect(() => {
   };
 
   // Handle sending a global chat message
-  const handleSendGlobalMessage = async(e) => {
+  const handleSendGlobalMessage = (e) => {
     e.preventDefault();
     if (!globalChatMessage.trim()) return;
 
-    // Create temporary message with pending state
-  const tempId = Date.now();
-  const tempMessage = {
-    id: tempId,
-    user: user?.username || "You",
-    message: globalChatMessage,
-    timestamp: "Just now",
-    pending: true
-  };
-  
-  // Add to UI immediately
-  setGlobalChatMessages([...globalChatMessages, tempMessage]);
-  
-  // Store the message content and clear input
-  const messageContent = globalChatMessage;
-  setGlobalChatMessage("");
-  
-  try {
-    // Send to server
-    const response = await API.post('/api/chat/global', { message: messageContent });
+    // Add message to UI immediately
+    const newMessage = {
+      id: Date.now(), // Temporary ID
+      user: user?.username || "You",
+      message: globalChatMessage,
+      timestamp: "Just now"
+    };
     
-    // Replace temporary message with server response
-    setGlobalChatMessages(prevMessages => 
-      prevMessages.map(msg => 
-        msg.id === tempId ? {...response.data, pending: false} : msg
-      )
-    );
-  } catch (err) {
-    console.error("Error sending global message:", err);
+    setGlobalChatMessages([...globalChatMessages, newMessage]);
+    setGlobalChatMessage("");
     
-    // Mark message as failed
-    setGlobalChatMessages(prevMessages => 
-      prevMessages.map(msg => 
-        msg.id === tempId ? {...msg, pending: false, failed: true} : msg
-      )
-    );
-  }
-};
-
-  // Fetch global chat messages function
-  const fetchGlobalChatMessages = useCallback(async () => {
-    if (isRefreshing) return;
-  
-    setIsRefreshing(true);
-  
-    try {
-      const timestamp = new Date().getTime();
-      const response = await API.get(`/api/chat/global?_t=${timestamp}`);
-    
-      if (Array.isArray(response.data)) {
-        setGlobalChatMessages(response.data);
-        setLastGlobalChatRefreshTime(new Date());
-      } else {
-        console.error('API returned non-array data:', response.data);
-      }
-    } catch (err) {
-      console.error("Error fetching global chat messages:", err);
-      // Only use mock data if we don't have any messages yet
-      if (globalChatMessages.length === 0) {
-        setGlobalChatMessages([
-          { id: 1, user: "SportsFan123", message: "Welcome to the global chat!", timestamp: "1 hour ago" },
-          { id: 2, user: "BasketballExpert", message: "Who do you think will win the championship?", timestamp: "45 minutes ago" },
-          { id: 3, user: "MarchMadnessFan", message: "My bracket is already busted!", timestamp: "30 minutes ago" }
-        ]);
-      }
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [isRefreshing, globalChatMessages.length]);
-
-  // Function to retry failed messages
-  const handleRetryGlobalMessage = async (failedMsg) => {
-  // Remove the failed message
-  setGlobalChatMessages(prevMessages => 
-    prevMessages.filter(msg => msg.id !== failedMsg.id)
-  );
-  
-  // Set the message content back in the input
-  setGlobalChatMessage(failedMsg.message);
+    // TODO: In a real implementation, you would send this to the server
+    // Example: API.post('/api/chat/global', { message: globalChatMessage });
   };
 
   // Handle game selection
@@ -529,69 +435,38 @@ useEffect(() => {
           )}
           
           {/* Global Chat View */}
-            {activeMenu === "chat" && (
-              <div className="main-content global-chat-container">
-                <div className="global-chat-header">
-                  <h2>Global Chat</h2>
-                  <p>Chat with other users about March Madness</p>
-                </div>
-                
-                <div className="chat-controls">
-                  <button 
-                    className="refresh-button" 
-                    onClick={fetchGlobalChatMessages}
-                    disabled={isRefreshing}
-                  >
-                    {isRefreshing ? 'Refreshing...' : 'Refresh'}
-                  </button>
-                  
-                  {lastGlobalChatRefreshTime && (
-                    <span className="last-updated">
-                      Last updated: {lastGlobalChatRefreshTime.toLocaleTimeString()}
-                    </span>
-                  )}
-                </div>
-                
-                <div className="global-chat-messages" ref={globalChatContainerRef}>
-                  {globalChatMessages.length === 0 ? (
-                    <div className="empty-chat">No messages yet. Be the first to chat!</div>
-                  ) : (
-                    globalChatMessages.map((msg, index) => (
-                      <div 
-                        key={index} 
-                        className={`chat-message ${msg.pending ? 'message-pending' : ''} ${msg.failed ? 'message-failed' : ''}`}
-                      >
-                        <div className="message-header">
-                          <span className="message-user">{msg.user}</span>
-                          <span className="message-time">
-                            {msg.pending ? 'Sending...' : msg.failed ? 'Failed to send' : msg.timestamp}
-                            {msg.failed && (
-                              <button 
-                                className="retry-button"
-                                onClick={() => handleRetryGlobalMessage(msg)}
-                              >
-                                Retry
-                              </button>
-                            )}
-                          </span>
-                        </div>
-                        <div className="message-content">{msg.message}</div>
-                      </div>
-                    ))
-                  )}
-                </div>
-                
-                <form className="chat-input" onSubmit={handleSendGlobalMessage}>
-                  <input
-                    type="text"
-                    placeholder="Type your message..."
-                    value={globalChatMessage}
-                    onChange={(e) => setGlobalChatMessage(e.target.value)}
-                  />
-                  <button type="submit" disabled={globalChatMessage.trim() === ''}>Send</button>
-                </form>
+          {activeMenu === "chat" && (
+            <div className="main-content global-chat-container">
+              <div className="global-chat-header">
+                <h2>Global Chat</h2>
+                <p>Chat with other users about March Madness</p>
               </div>
-            )}
+              <div className="global-chat-messages">
+                {globalChatMessages.length === 0 ? (
+                  <div className="empty-chat">No messages yet. Be the first to chat!</div>
+                ) : (
+                  globalChatMessages.map((msg, index) => (
+                    <div key={index} className="chat-message">
+                      <div className="message-header">
+                        <span className="message-user">{msg.user}</span>
+                        <span className="message-time">{msg.timestamp}</span>
+                      </div>
+                      <div className="message-content">{msg.message}</div>
+                    </div>
+                  ))
+                )}
+              </div>
+              <form className="chat-input" onSubmit={handleSendGlobalMessage}>
+                <input
+                  type="text"
+                  placeholder="Type your message..."
+                  value={globalChatMessage}
+                  onChange={(e) => setGlobalChatMessage(e.target.value)}
+                />
+                <button type="submit">Send</button>
+              </form>
+            </div>
+          )}
           
           {/* Stats View */}
           {activeMenu === "stats" && (
@@ -712,7 +587,7 @@ useEffect(() => {
         <div className="disclaimer">
           <p>
             SportsChatPlus.com is not affiliated with the National Collegiate
-            Athletic Association (NCAAÂ®) or March Madness Athletic Association,
+            Athletic Association (NCAA®) or March Madness Athletic Association,
             neither of which has supplied, reviewed, approved, or endorsed the
             material on this site. SportsChatPlus.com is solely responsible for
             this site but makes no guarantee about the accuracy or completeness
