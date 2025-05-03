@@ -1043,3 +1043,57 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
+
+// GET global chat messages
+app.get('/api/chat/global', async (req, res) => {
+  try {
+    const result = await sql.query`
+      SELECT 
+        m.MessageID as id,
+        u.Username as user,
+        m.Message as message,
+        FORMAT(m.Timestamp, 'MMM dd, yyyy h:mm tt') as timestamp
+      FROM GlobalChatMessages m
+      JOIN Users u ON m.UserID = u.UserID
+      ORDER BY m.Timestamp ASC
+    `;
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("Error fetching global chat messages:", err);
+    res.status(500).json({ message: 'Failed to fetch global chat messages' });
+  }
+});
+
+// POST a new global chat message
+app.post('/api/chat/global', async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ message: 'You must be logged in to chat' });
+  }
+
+  const { message } = req.body;
+  const userId = req.session.user.id;
+
+  if (!message) {
+    return res.status(400).json({ message: 'Message cannot be empty' });
+  }
+
+  try {
+    const result = await sql.query`
+      INSERT INTO GlobalChatMessages (UserID, Message, Timestamp)
+      OUTPUT INSERTED.MessageID, INSERTED.Timestamp
+      VALUES (${userId}, ${message}, GETDATE())
+    `;
+
+    const newMessage = {
+      id: result.recordset[0].MessageID,
+      user: req.session.user.username,
+      message,
+      timestamp: new Date(result.recordset[0].Timestamp).toLocaleString()
+    };
+
+    res.status(201).json(newMessage);
+  } catch (err) {
+    console.error("Error sending global chat message:", err);
+    res.status(500).json({ message: 'Failed to send global chat message' });
+  }
+});
