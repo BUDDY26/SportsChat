@@ -1,9 +1,255 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
 import StatsPage from './StatsPage';
 import TeamsPage from './TeamsPage';
 import "./style.css";
+
+// Create placeholder components with auto-scroll and updating timestamps
+const PlaceholderGlobalChat = ({ user }) => {
+  const [message, setMessage] = useState('');
+  const [messages, setMessages] = useState([
+    { id: 1, user: "SportsFan123", message: "Welcome to the global chat!", timestamp: "1 hour ago" },
+    { id: 2, user: "BasketballExpert", message: "Who do you think will win the championship?", timestamp: "45 minutes ago" },
+    { id: 3, user: "MarchMadnessFan", message: "My bracket is already busted!", timestamp: "30 minutes ago" }
+  ]);
+  const chatContainerRef = useRef(null);
+
+  // Auto-scroll function
+  const scrollToBottom = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  };
+
+  // Format timestamp function
+  const getFormattedTimestamp = () => {
+    const now = new Date();
+    return now.toLocaleTimeString();
+  };
+
+  // Auto-scroll when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Update timestamps every minute
+  useEffect(() => {
+    const updateTimestamps = () => {
+      setMessages(prevMessages => 
+        prevMessages.map(msg => {
+          if (msg.timestamp === "Just now") {
+            return { ...msg, timestamp: "1 minute ago" };
+          } else if (msg.timestamp === "1 minute ago") {
+            return { ...msg, timestamp: "2 minutes ago" };
+          } else if (msg.timestamp.includes("minutes ago")) {
+            const minutes = parseInt(msg.timestamp.split(" ")[0]);
+            return { ...msg, timestamp: `${minutes + 1} minutes ago` };
+          }
+          return msg;
+        })
+      );
+    };
+
+    const interval = setInterval(updateTimestamps, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!message.trim()) return;
+
+    const newMessage = {
+      id: Date.now(),
+      user: user?.username || "You",
+      message: message,
+      timestamp: "Just now"
+    };
+
+    setMessages([...messages, newMessage]);
+    setMessage('');
+    
+    // Auto-scroll will happen due to useEffect hook
+  };
+
+  return (
+    <div className="global-chat-container">
+      <div className="chat-header">
+        <h2>Global Chat</h2>
+        <div className="chat-controls">
+          <button 
+            className="refresh-button" 
+            onClick={scrollToBottom}
+          >
+            Refresh
+          </button>
+          <span className="last-updated">
+            Last updated: {new Date().toLocaleTimeString()}
+          </span>
+        </div>
+      </div>
+      
+      <div className="chat-messages" ref={chatContainerRef}>
+        {messages.map((msg, index) => (
+          <div key={index} className="chat-message">
+            <div className="message-header">
+              <span className="message-user">{msg.user}</span>
+              <span className="message-time">{msg.timestamp}</span>
+            </div>
+            <div className="message-content">{msg.message}</div>
+          </div>
+        ))}
+      </div>
+      
+      <form className="chat-input" onSubmit={handleSendMessage}>
+        <input
+          type="text"
+          placeholder="Type your message..."
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+        />
+        <button type="submit" disabled={message.trim() === ''}>Send</button>
+      </form>
+    </div>
+  );
+};
+
+const PlaceholderGameChat = ({ user, gameId }) => {
+  // Custom hook to manage game-specific chat rooms
+  const useGameChat = (gameId) => {
+    // State for all game chats
+    const [gameChats, setGameChats] = useState({});
+    
+    // Get messages for the current game
+    const getGameMessages = () => {
+      if (!gameChats[gameId]) {
+        // Initialize with default messages for a new game
+        setGameChats(prev => ({
+          ...prev,
+          [gameId]: [
+            { id: 1, user: "BasketballFan22", message: `Let's discuss game #${gameId}!`, timestamp: "2 hours ago" },
+            { id: 2, user: "HoopsDreams", message: "Should be a good match-up.", timestamp: "1 hour ago" },
+            { id: 3, user: "MarchMadnessFan", message: "What's everyone's prediction?", timestamp: "45 minutes ago" }
+          ]
+        }));
+      }
+      
+      return gameChats[gameId] || [];
+    };
+    
+    // Add a message to the current game chat
+    const addMessage = (message) => {
+      setGameChats(prev => ({
+        ...prev,
+        [gameId]: [...(prev[gameId] || []), message]
+      }));
+    };
+
+    // Update timestamps for the current game
+    const updateTimestamps = () => {
+      setGameChats(prev => {
+        // Only update if we have messages for this game
+        if (!prev[gameId]) return prev;
+        
+        const updatedChats = { ...prev };
+        updatedChats[gameId] = prev[gameId].map(msg => {
+          if (msg.timestamp === "Just now") {
+            return { ...msg, timestamp: "1 minute ago" };
+          } else if (msg.timestamp === "1 minute ago") {
+            return { ...msg, timestamp: "2 minutes ago" };
+          } else if (msg.timestamp.includes("minutes ago")) {
+            const minutes = parseInt(msg.timestamp.split(" ")[0]);
+            return { ...msg, timestamp: `${minutes + 1} minutes ago` };
+          }
+          return msg;
+        });
+        
+        return updatedChats;
+      });
+    };
+    
+    return { messages: getGameMessages(), addMessage, updateTimestamps };
+  };
+  
+  const [message, setMessage] = useState('');
+  const { messages, addMessage, updateTimestamps } = useGameChat(gameId);
+  const chatContainerRef = useRef(null);
+
+  // Auto-scroll function
+  const scrollToBottom = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  };
+
+  // Auto-scroll when messages change or game changes
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, gameId]);
+
+  // Update timestamps every minute
+  useEffect(() => {
+    const interval = setInterval(updateTimestamps, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, [updateTimestamps]);
+
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!message.trim()) return;
+
+    const newMessage = {
+      id: Date.now(),
+      user: user?.username || "You",
+      message: message,
+      timestamp: "Just now"
+    };
+
+    addMessage(newMessage);
+    setMessage('');
+    
+    // Auto-scroll will happen due to useEffect hook
+  };
+
+  return (
+    <div className="game-chat-container">
+      <div className="chat-header">
+        <h3>Game Chat (Game #{gameId})</h3>
+        <button 
+          className="refresh-button" 
+          onClick={scrollToBottom}
+          style={{ fontSize: '12px', padding: '2px 5px', margin: '0 5px' }}
+        >
+          Scroll to Bottom
+        </button>
+      </div>
+      
+      <div className="chat-messages" ref={chatContainerRef}>
+        {messages.map((msg, index) => (
+          <div key={index} className="chat-message">
+            <div className="message-header">
+              <span className="message-user">{msg.user}</span>
+              <span className="message-time">{msg.timestamp}</span>
+            </div>
+            <div className="message-content">{msg.message}</div>
+          </div>
+        ))}
+      </div>
+      
+      <form className="chat-input" onSubmit={handleSendMessage}>
+        <input
+          type="text"
+          placeholder="Type your message..."
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+        />
+        <button type="submit" disabled={message.trim() === ''}>
+          Send
+        </button>
+      </form>
+    </div>
+  );
+};
 
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -16,38 +262,10 @@ const DashboardPage = () => {
   const [selectedGame, setSelectedGame] = useState(null);
   const [activeTab, setActiveTab] = useState("upcoming");
   const [activeMenu, setActiveMenu] = useState("games");
-  const [chatMessage, setChatMessage] = useState("");
-  const [chatMessages, setChatMessages] = useState([]);
   const [games, setGames] = useState([]);
   const [gamesLoading, setGamesLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastRefreshTime, setLastRefreshTime] = useState(null);
-  
-  // Global chat state
-  const [globalChatMessage, setGlobalChatMessage] = useState("");
-  const [globalChatMessages, setGlobalChatMessages] = useState([
-    { id: 1, user: "SportsFan123", message: "Welcome to the global chat!", timestamp: "1 hour ago" },
-    { id: 2, user: "BasketballExpert", message: "Who do you think will win the championship?", timestamp: "45 minutes ago" },
-    { id: 3, user: "MarchMadnessFan", message: "My bracket is already busted!", timestamp: "30 minutes ago" }
-  ]);
-
-  // Fetch chat messages for selected game
-  const fetchChatMessages = useCallback(async () => {
-    if (!selectedGame?.id) return;
-    
-    try {
-      const response = await API.get(`/api/games/${selectedGame.id}/chat`);
-      setChatMessages(response.data);
-    } catch (err) {
-      console.error("Error fetching chat messages:", err);
-      // Use mock chat messages as fallback
-      setChatMessages([
-        { id: 1, user: "BasketballFan22", message: "Can't wait for this game!", timestamp: "2 hours ago" },
-        { id: 2, user: "HoopsDreams", message: "Should be a good match-up.", timestamp: "1 hour ago" },
-        { id: 3, user: "MarchMadnessFan", message: "What's everyone's prediction?", timestamp: "45 minutes ago" }
-      ]);
-    }
-  }, [selectedGame]);
   
   // Check if user is logged in
   useEffect(() => {
@@ -120,13 +338,6 @@ const DashboardPage = () => {
     fetchGames();
   }, [activeTab, isLoading, fetchGames]);
 
-  // Fetch chat messages when a game is selected
-  useEffect(() => {
-    if (selectedGame && !isLoading) {
-      fetchChatMessages();
-    }
-  }, [selectedGame, isLoading, fetchChatMessages]);
-
   // Handle user logout
   const handleLogout = async () => {
     try {
@@ -138,55 +349,6 @@ const DashboardPage = () => {
       localStorage.removeItem("user");
       navigate("/login");
     }
-  };
-
-  // Handle sending a chat message
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!chatMessage.trim() || !selectedGame?.id) return;
-
-    try {
-      await API.post(`/api/games/${selectedGame.id}/chat`, { message: chatMessage });
-      
-      // Add message to UI immediately
-      const newMessage = {
-        id: Date.now(), // Temporary ID
-        user: user?.username || "You",
-        message: chatMessage,
-        timestamp: "Just now"
-      };
-      
-      setChatMessages([...chatMessages, newMessage]);
-      setChatMessage("");
-      
-      // Refresh chat messages after a short delay
-      setTimeout(() => {
-        fetchChatMessages();
-      }, 1000);
-    } catch (err) {
-      console.error("Error sending message:", err);
-      alert("Failed to send message. Please try again.");
-    }
-  };
-
-  // Handle sending a global chat message
-  const handleSendGlobalMessage = (e) => {
-    e.preventDefault();
-    if (!globalChatMessage.trim()) return;
-
-    // Add message to UI immediately
-    const newMessage = {
-      id: Date.now(), // Temporary ID
-      user: user?.username || "You",
-      message: globalChatMessage,
-      timestamp: "Just now"
-    };
-    
-    setGlobalChatMessages([...globalChatMessages, newMessage]);
-    setGlobalChatMessage("");
-    
-    // TODO: In a real implementation, you would send this to the server
-    // Example: API.post('/api/chat/global', { message: globalChatMessage });
   };
 
   // Handle game selection
@@ -436,35 +598,8 @@ const DashboardPage = () => {
           
           {/* Global Chat View */}
           {activeMenu === "chat" && (
-            <div className="main-content global-chat-container">
-              <div className="global-chat-header">
-                <h2>Global Chat</h2>
-                <p>Chat with other users about March Madness</p>
-              </div>
-              <div className="global-chat-messages">
-                {globalChatMessages.length === 0 ? (
-                  <div className="empty-chat">No messages yet. Be the first to chat!</div>
-                ) : (
-                  globalChatMessages.map((msg, index) => (
-                    <div key={index} className="chat-message">
-                      <div className="message-header">
-                        <span className="message-user">{msg.user}</span>
-                        <span className="message-time">{msg.timestamp}</span>
-                      </div>
-                      <div className="message-content">{msg.message}</div>
-                    </div>
-                  ))
-                )}
-              </div>
-              <form className="chat-input" onSubmit={handleSendGlobalMessage}>
-                <input
-                  type="text"
-                  placeholder="Type your message..."
-                  value={globalChatMessage}
-                  onChange={(e) => setGlobalChatMessage(e.target.value)}
-                />
-                <button type="submit">Send</button>
-              </form>
+            <div className="main-content">
+              <PlaceholderGlobalChat user={user} />
             </div>
           )}
           
@@ -550,33 +685,7 @@ const DashboardPage = () => {
               )}
 
               {/* Chat Section */}
-              <div className="chat-section">
-                <h3>Game Chat</h3>
-                <div className="chat-messages">
-                  {chatMessages.length === 0 ? (
-                    <div className="empty-chat">No messages yet. Be the first to chat!</div>
-                  ) : (
-                    chatMessages.map((msg, index) => (
-                      <div key={index} className="chat-message">
-                        <div className="message-header">
-                          <span className="message-user">{msg.user}</span>
-                          <span className="message-time">{msg.timestamp}</span>
-                        </div>
-                        <div className="message-content">{msg.message}</div>
-                      </div>
-                    ))
-                  )}
-                </div>
-                <form className="chat-input" onSubmit={handleSendMessage}>
-                  <input
-                    type="text"
-                    placeholder="Type your message..."
-                    value={chatMessage}
-                    onChange={(e) => setChatMessage(e.target.value)}
-                  />
-                  <button type="submit">Send</button>
-                </form>
-              </div>
+              <PlaceholderGameChat user={user} gameId={selectedGame.id} />
             </div>
           )}
         </div>
