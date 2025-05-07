@@ -4,7 +4,6 @@ import API from "../services/api";
 // Import the components that work
 import StatsPage from './StatsPage';
 import TeamsPage from './TeamsPage';
-import BettingPage from './BettingPage';
 import "./style.css";
 
 // Create placeholder components with auto-scroll and updating timestamps
@@ -584,11 +583,11 @@ const DashboardPage = () => {
             </div>
           )}
           
-          {/* Bets View */}
+          {/* Placeholder for My Bets View */}
           {activeMenu === "bets" && (
-            <div className="main-content betting-content">
-              <h2>Betting Center</h2>
-              <BettingPage user={user} />
+            <div className="main-content placeholder-content">
+              <h2>My Bets</h2>
+              <p>Your betting history will be displayed here.</p>
             </div>
           )}
           
