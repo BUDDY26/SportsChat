@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
-// Import the components that work
 import StatsPage from './StatsPage';
 import TeamsPage from './TeamsPage';
 import "./style.css";

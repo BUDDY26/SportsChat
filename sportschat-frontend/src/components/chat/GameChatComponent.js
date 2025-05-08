@@ -1,63 +1,57 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import API from '../services/api';
+import API from '../../services/api';
 
-const GlobalChatComponent = ({ user }) => {
+const GameChatComponent = ({ user, gameId }) => {
   const chatContainerRef = useRef(null);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastRefreshTime, setLastRefreshTime] = useState(null);
   const [error, setError] = useState(null);
 
-  // Fetch messages function
+  // Fetch chat messages for the game
   const fetchMessages = useCallback(async () => {
-    if (isRefreshing) return;
+    if (!gameId || isRefreshing) return;
     
     setIsRefreshing(true);
     
     try {
       const timestamp = new Date().getTime();
-      const response = await API.get(`/api/chat/global?_t=${timestamp}`);
+      const response = await API.get(`/api/games/${gameId}/chat?_t=${timestamp}`);
       
       if (Array.isArray(response.data)) {
         setMessages(response.data);
-        setLastRefreshTime(new Date());
         setError(null);
       } else {
         console.error('API returned non-array data:', response.data);
         setError('Received invalid data format from server');
       }
     } catch (err) {
-      console.error("Error fetching chat messages:", err);
+      console.error("Error fetching game chat messages:", err);
       setError('Failed to load messages. Please try again.');
       
       // Only use mock data if we don't have any messages yet
       if (messages.length === 0) {
         setMessages([
-          { id: 1, user: "SportsFan123", message: "Welcome to the global chat!", timestamp: "1 hour ago" },
-          { id: 2, user: "BasketballExpert", message: "Who do you think will win the championship?", timestamp: "45 minutes ago" },
-          { id: 3, user: "MarchMadnessFan", message: "My bracket is already busted!", timestamp: "30 minutes ago" }
+          { id: 1, user: "BasketballFan22", message: "Can't wait for this game!", timestamp: "2 hours ago" },
+          { id: 2, user: "HoopsDreams", message: "Should be a good match-up.", timestamp: "1 hour ago" },
+          { id: 3, user: "MarchMadnessFan", message: "What's everyone's prediction?", timestamp: "45 minutes ago" }
         ]);
       }
     } finally {
       setIsRefreshing(false);
     }
-  }, [isRefreshing, messages.length]);
+  }, [gameId, isRefreshing, messages.length]);
 
-  // Set up auto-refresh
+  // Auto-refresh when game ID changes
   useEffect(() => {
-    let refreshInterval;
-    
-    fetchMessages();
-    
-    refreshInterval = setInterval(() => {
+    if (gameId) {
       fetchMessages();
-    }, 10000);
-    
-    return () => {
-      if (refreshInterval) clearInterval(refreshInterval);
-    };
-  }, [fetchMessages]);
+      
+      // Optionally, you could set up a refresh interval here
+      // const refreshInterval = setInterval(fetchMessages, 10000);
+      // return () => clearInterval(refreshInterval);
+    }
+  }, [gameId, fetchMessages]);
 
   // Auto-scroll effect
   useEffect(() => {
@@ -69,7 +63,7 @@ const GlobalChatComponent = ({ user }) => {
   // Handle sending a message
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!message.trim()) return;
+    if (!message.trim() || !gameId) return;
 
     // Create temporary message with pending state
     const tempId = Date.now();
@@ -90,7 +84,7 @@ const GlobalChatComponent = ({ user }) => {
     
     try {
       // Send to server
-      const response = await API.post('/api/chat/global', { message: messageContent });
+      const response = await API.post(`/api/games/${gameId}/chat`, { message: messageContent });
       
       // Replace temporary message with server response
       setMessages(prevMessages => 
@@ -99,7 +93,7 @@ const GlobalChatComponent = ({ user }) => {
         )
       );
     } catch (err) {
-      console.error("Error sending message:", err);
+      console.error("Error sending game chat message:", err);
       
       // Mark message as failed
       setMessages(prevMessages => 
@@ -122,27 +116,11 @@ const GlobalChatComponent = ({ user }) => {
   };
 
   return (
-    <div className="global-chat-container">
+    <div className="game-chat-container">
       <div className="chat-header">
-        <h2>Global Chat</h2>
-        <div className="chat-controls">
-          <button 
-            className="refresh-button" 
-            onClick={fetchMessages}
-            disabled={isRefreshing}
-          >
-            {isRefreshing ? 'Refreshing...' : 'Refresh'}
-          </button>
-          
-          {lastRefreshTime && (
-            <span className="last-updated">
-              Last updated: {lastRefreshTime.toLocaleTimeString()}
-            </span>
-          )}
-        </div>
+        <h3>Game Chat</h3>
+        {error && <div className="error-message">{error}</div>}
       </div>
-      
-      {error && <div className="error-message">{error}</div>}
       
       <div className="chat-messages" ref={chatContainerRef}>
         {messages.length === 0 ? (
@@ -180,10 +158,15 @@ const GlobalChatComponent = ({ user }) => {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
         />
-        <button type="submit" disabled={message.trim() === ''}>Send</button>
+        <button 
+          type="submit" 
+          disabled={message.trim() === '' || !gameId}
+        >
+          Send
+        </button>
       </form>
     </div>
   );
 };
 
-export default GlobalChatComponent;
+export default GameChatComponent;
