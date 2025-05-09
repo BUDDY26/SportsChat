@@ -11,8 +11,9 @@ const fs = require('fs');
 
 dotenv.config();
 const app = express();
-// Always use the port provided by Azure or default to 3000 locally
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.NODE_ENV === 'production' 
+  ? (process.env.PORT || 8080)  // Use 8080 as default in production
+  : 5000;
 
 
 // Configure MSSQL Database Connection
