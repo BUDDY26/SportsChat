@@ -51,6 +51,19 @@ Templates provide a consistent structure for all features. Each assigned module 
 4. Modify the template code to implement your specific feature
 
 ---
+## Deployment
+
+To prepare the application for deployment:
+
+1. Install fs-extra: `npm install fs-extra`
+2. Run the deployment script: `node deploy.js`
+
+This will:
+- Build the frontend React application
+- Copy the build files to the backend/build directory
+- Install backend dependencies
+
+After running this script, the backend folder will be ready for deployment to Azure.
 
 ## **Setting Up & Running the Project**
 ### **Backend (Server)**
