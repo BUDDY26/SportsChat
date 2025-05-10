@@ -802,14 +802,21 @@ app.get('/api/bracket', async (req, res) => {
 let frontendPath;
 if (process.env.NODE_ENV === 'production') {
   console.log('Running in production mode');
+  console.log('Current directory:', __dirname);
   
-  // In production, look for the build folder in the current directory
-  frontendPath = path.join(__dirname, 'build');
-  console.log('Using production frontend path:', frontendPath);
+  // Try the standard path first
+  const standardPath = path.join(__dirname, '../sportschat-frontend/build');
+  if (fs.existsSync(standardPath)) {
+    frontendPath = standardPath;
+    console.log('Using standard frontend path:', frontendPath);
+  } else {
+    // If standard path doesn't exist, try alternative Azure path
+    frontendPath = path.join(process.cwd(), 'sportschat-frontend/build');
+    console.log('Using alternative frontend path:', frontendPath);
+  }
 } else {
-  // In development, look for the build folder in the frontend directory
+  // Local development path
   frontendPath = path.join(__dirname, '../sportschat-frontend/build');
-  console.log('Using development frontend path:', frontendPath);
 }
 
 // Serve static files
