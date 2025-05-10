@@ -15,6 +15,7 @@ const PORT = process.env.NODE_ENV === 'production'
   ? (process.env.PORT || 8080)  // Use 8080 as default in production
   : 5000;
 
+
 // Configure MSSQL Database Connection
 const dbConfig = {
     user: process.env.DB_USER,
@@ -543,106 +544,149 @@ app.post('/api/games/:id/chat', async (req, res) => {
   }
 });
 
-// Place a bet on a game
-app.post('/api/games/:id/bet', async (req, res) => {
+// Create a new open bet
+app.post('/api/bets', async (req, res) => {
   if (!req.session.user) {
-    return res.status(401).json({ message: 'You must be logged in to place bets' });
+      return res.status(401).json({ message: 'You must be logged in to create a bet.' });
   }
-  
+
+  const { gameId, teamId, wagerAmount } = req.body;
+  const userId = req.session.user.id;
+
+  if (!gameId || !teamId || !wagerAmount) {
+      return res.status(400).json({ message: 'Game, team, and wager amount are required.' });
+  }
+
   try {
-    const { id } = req.params;
-    const { teamId, amount } = req.body;
-    const userId = req.session.user.id;
-    
-    if (!teamId || !amount) {
-      return res.status(400).json({ message: 'Team and amount are required' });
-    }
-    
-    // Check if game exists and hasn't started yet
-    const gameResult = await sql.query`
-      SELECT 
-        GameID, 
-        DatePlayed,
-        ScoreTeam1,
-        ScoreTeam2
-      FROM Games
-      WHERE GameID = ${id}
-    `;
-    
-    if (gameResult.recordset.length === 0) {
-      return res.status(404).json({ message: 'Game not found' });
-    }
-    
-    const game = gameResult.recordset[0];
-    
-    // Don't allow bets on games that have already started or ended
-    if (new Date(game.DatePlayed) < new Date() || 
-        (game.ScoreTeam1 > 0 || game.ScoreTeam2 > 0)) {
-      return res.status(400).json({ message: 'Cannot bet on games that have already started' });
-    }
-    
-    // Find another user as User2 (for demo purposes - in a real app you'd have opponents)
-    const otherUserResult = await sql.query`
-      SELECT TOP 1 UserID 
-      FROM Users 
-      WHERE UserID != ${userId}
-      ORDER BY NEWID()
-    `;
-    
-    let user2Id = null;
-    if (otherUserResult.recordset.length > 0) {
-      user2Id = otherUserResult.recordset[0].UserID;
-    }
-    
-    // Record the bet
-    await sql.query`
-      INSERT INTO Bets (GameID, UserID, User2ID, WagerAmount, BetStatus, CreatedAt)
-      VALUES (${id}, ${userId}, ${user2Id}, ${amount}, 'Pending', GETDATE())
-    `;
-    
-    res.status(201).json({ message: 'Bet placed successfully' });
+      const result = await sql.query`
+          INSERT INTO Bets (GameID, UserID, TeamID, WagerAmount, BetStatus)
+          OUTPUT INSERTED.*
+          VALUES (${gameId}, ${userId}, ${teamId}, ${wagerAmount}, 'Open')
+      `;
+
+      res.status(201).json(result.recordset[0]);
   } catch (err) {
-    console.error('Error placing bet:', err);
-    res.status(500).json({ message: 'Failed to place bet' });
+      console.error('Error creating bet:', err);
+      res.status(500).json({ message: 'Failed to create bet.' });
   }
 });
 
-// Get user's bets
-app.get('/api/user/bets', async (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).json({ message: 'You must be logged in to view bets' });
-  }
-  
+// Get all open bets
+app.get('/api/bets/open', async (req, res) => {
   try {
-    const userId = req.session.user.id;
-    
-    const result = await sql.query`
-      SELECT 
-        b.BetID as id,
-        b.GameID as gameId,
-        g.Team1ID as team1Id,
-        g.Team2ID as team2Id,
-        t1.TeamName as team1,
-        t2.TeamName as team2,
-        b.WagerAmount as amount,
-        b.BetStatus as status,
-        b.WinnerID as winnerId,
-        FORMAT(b.CreatedAt, 'MMM dd, yyyy h:mm tt') as placedAt,
-        FORMAT(b.CompletedAt, 'MMM dd, yyyy h:mm tt') as completedAt,
-        g.ScoreTeam1 as score1,
-        g.ScoreTeam2 as score2
-      FROM Bets b
-      JOIN Games g ON b.GameID = g.GameID
-      JOIN Teams t1 ON g.Team1ID = t1.TeamID
-      JOIN Teams t2 ON g.Team2ID = t2.TeamID
-      WHERE b.UserID = ${userId}
-      ORDER BY b.CreatedAt DESC
-    `;
-    
-    res.json(result.recordset);
+      const result = await sql.query`
+          SELECT 
+              b.BetID as id,
+              b.GameID as gameId,
+              g.Team1ID, g.Team2ID,
+              t1.TeamName as team1,
+              t2.TeamName as team2,
+              b.TeamID as betOnTeamId,
+              bt.TeamName as betOnTeamName,
+              b.UserID as creatorId,
+              u.Username as creatorUsername,
+              b.WagerAmount,
+              b.BetStatus
+          FROM Bets b
+          JOIN Games g ON b.GameID = g.GameID
+          JOIN Teams t1 ON g.Team1ID = t1.TeamID
+          JOIN Teams t2 ON g.Team2ID = t2.TeamID
+          JOIN Teams bt ON b.TeamID = bt.TeamID
+          JOIN Users u ON b.UserID = u.UserID
+          WHERE b.BetStatus = 'Open'
+      `;
+
+      res.json(result.recordset);
   } catch (err) {
-    console.error('Error fetching user bets:', err);
-    res.status(500).json({ message: 'Failed to fetch bet information' });
+      console.error('Error fetching open bets:', err);
+      res.status(500).json({ message: 'Failed to fetch open bets.' });
+  }
+});
+
+// Join an existing open bet
+app.post('/api/bets/:id/join', async (req, res) => {
+  if (!req.session.user) {
+      return res.status(401).json({ message: 'You must be logged in to join a bet.' });
+  }
+
+  const { id } = req.params;
+  const user2Id = req.session.user.id;
+
+  try {
+      // Fetch the bet to check status
+      const betResult = await sql.query`
+          SELECT * FROM Bets WHERE BetID = ${id}
+      `;
+
+      if (betResult.recordset.length === 0) {
+          return res.status(404).json({ message: 'Bet not found.' });
+      }
+
+      const bet = betResult.recordset[0];
+
+      if (bet.BetStatus !== 'Open') {
+          return res.status(400).json({ message: 'Bet is not open for joining.' });
+      }
+
+      // Prevent same user joining their own bet
+      if (bet.UserID === user2Id) {
+          return res.status(400).json({ message: 'You cannot join your own bet.' });
+      }
+
+      // Update the bet
+      await sql.query`
+          UPDATE Bets
+          SET User2ID = ${user2Id}, BetStatus = 'Closed'
+          WHERE BetID = ${id}
+      `;
+
+      res.json({ message: 'Successfully joined the bet.' });
+  } catch (err) {
+      console.error('Error joining bet:', err);
+      res.status(500).json({ message: 'Failed to join bet.' });
+  }
+});
+
+// Get bets involving the logged-in user
+app.get('/api/bets/my', async (req, res) => {
+  if (!req.session.user) {
+      return res.status(401).json({ message: 'You must be logged in to view your bets.' });
+  }
+
+  const userId = req.session.user.id;
+
+  try {
+      const result = await sql.query`
+          SELECT 
+              b.BetID as id,
+              b.GameID as gameId,
+              g.Team1ID, g.Team2ID,
+              t1.TeamName as team1,
+              t2.TeamName as team2,
+              b.TeamID as betOnTeamId,
+              bt.TeamName as betOnTeamName,
+              b.UserID as creatorId,
+              u1.Username as creatorUsername,
+              b.User2ID as joinerId,
+              u2.Username as joinerUsername,
+              b.WagerAmount,
+              b.BetStatus,
+              b.WinnerID
+          FROM Bets b
+          JOIN Games g ON b.GameID = g.GameID
+          JOIN Teams t1 ON g.Team1ID = t1.TeamID
+          JOIN Teams t2 ON g.Team2ID = t2.TeamID
+          JOIN Teams bt ON b.TeamID = bt.TeamID
+          LEFT JOIN Users u1 ON b.UserID = u1.UserID
+          LEFT JOIN Users u2 ON b.User2ID = u2.UserID
+          WHERE b.UserID = ${userId} OR b.User2ID = ${userId}
+          ORDER BY b.BetStatus DESC, b.BetID DESC
+      `;
+
+      res.json(result.recordset);
+  } catch (err) {
+      console.error('Error fetching user bets:', err);
+      res.status(500).json({ message: 'Failed to fetch your bets.' });
   }
 });
 
@@ -798,18 +842,24 @@ app.get('/api/bracket', async (req, res) => {
 });
 
 // Determine frontend path based on environment
-// Determine frontend path based on environment
 let frontendPath;
 if (process.env.NODE_ENV === 'production') {
   console.log('Running in production mode');
+  console.log('Current directory:', __dirname);
   
-  // In production, look for the build folder in the current directory
-  frontendPath = path.join(__dirname, 'build');
-  console.log('Using production frontend path:', frontendPath);
+  // Try the standard path first
+  const standardPath = path.join(__dirname, '../sportschat-frontend/build');
+  if (fs.existsSync(standardPath)) {
+    frontendPath = standardPath;
+    console.log('Using standard frontend path:', frontendPath);
+  } else {
+    // If standard path doesn't exist, try alternative Azure path
+    frontendPath = path.join(process.cwd(), 'sportschat-frontend/build');
+    console.log('Using alternative frontend path:', frontendPath);
+  }
 } else {
-  // In development, look for the build folder in the frontend directory
+  // Local development path
   frontendPath = path.join(__dirname, '../sportschat-frontend/build');
-  console.log('Using development frontend path:', frontendPath);
 }
 
 // Serve static files
@@ -1037,3 +1087,57 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
+
+// GET global chat messages
+app.get('/api/chat/global', async (req, res) => {
+  try {
+    const result = await sql.query`
+      SELECT 
+        m.MessageID as id,
+        u.Username as user,
+        m.Message as message,
+        FORMAT(m.Timestamp, 'MMM dd, yyyy h:mm tt') as timestamp
+      FROM GlobalChatMessages m
+      JOIN Users u ON m.UserID = u.UserID
+      ORDER BY m.Timestamp ASC
+    `;
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("Error fetching global chat messages:", err);
+    res.status(500).json({ message: 'Failed to fetch global chat messages' });
+  }
+});
+
+// POST a new global chat message
+app.post('/api/chat/global', async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ message: 'You must be logged in to chat' });
+  }
+
+  const { message } = req.body;
+  const userId = req.session.user.id;
+
+  if (!message) {
+    return res.status(400).json({ message: 'Message cannot be empty' });
+  }
+
+  try {
+    const result = await sql.query`
+      INSERT INTO GlobalChatMessages (UserID, Message, Timestamp)
+      OUTPUT INSERTED.MessageID, INSERTED.Timestamp
+      VALUES (${userId}, ${message}, GETDATE())
+    `;
+
+    const newMessage = {
+      id: result.recordset[0].MessageID,
+      user: req.session.user.username,
+      message,
+      timestamp: new Date(result.recordset[0].Timestamp).toLocaleString()
+    };
+
+    res.status(201).json(newMessage);
+  } catch (err) {
+    console.error("Error sending global chat message:", err);
+    res.status(500).json({ message: 'Failed to send global chat message' });
+  }
+});
