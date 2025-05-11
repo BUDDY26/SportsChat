@@ -1076,18 +1076,6 @@ app.get('/api/stats/teams', async (req, res) => {
     res.status(500).json({ message: "Failed to fetch team stats" });
   }
 });
-
-
-// Handle client-side routing - serve index.html for all non-API routes
-app.get('*', (req, res) => {
-  res.sendFile(path.join(frontendPath, 'index.html'));
-});
-
-// Start Server
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-
 // GET global chat messages
 app.get('/api/chat/global', async (req, res) => {
   try {
@@ -1141,3 +1129,13 @@ app.post('/api/chat/global', async (req, res) => {
     res.status(500).json({ message: 'Failed to send global chat message' });
   }
 });
+
+// Handle client-side routing - serve index.html for all non-API routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
+// Start Server
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
