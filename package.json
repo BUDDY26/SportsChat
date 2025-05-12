@@ -5,10 +5,10 @@
   "engines": {
     "node": "18.x"
   },
-
   "scripts": {
     "install-all": "npm install && cd sportschat-frontend && npm install && cd ../sportschat-backend && npm install",
     "build": "cd sportschat-frontend && npm run build",
+    "postinstall": "npm run install-all && npm run build",
     "start": "node sportschat-backend/server.js"
   },
   "dependencies": {
