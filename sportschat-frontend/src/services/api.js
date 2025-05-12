@@ -51,6 +51,42 @@ export const getCurrentUser = async () => {
     }
 };
 
+// Create a new bet
+export const createBet = async (gameId, teamId, wagerAmount) => {
+  const response = await API.post('/api/bets', { gameId, teamId, wagerAmount });
+  return response.data;
+};
+
+// Get open bets
+export const getOpenBets = async () => {
+  const response = await API.get('/api/bets/open');
+  return response.data;
+};
+
+// Join a bet
+export const joinBet = async (betId) => {
+  const response = await API.post(`/api/bets/${betId}/join`);
+  return response.data;
+};
+
+// Get my bets
+export const getMyBets = async () => {
+  const response = await API.get('/api/bets/my');
+  return response.data;
+};
+
+// Update games for dropdown menu
+export const getGames = async () => {
+  const response = await API.get('/api/games');
+  return response.data;
+};
+
+// Update teams for dropdown menu
+export const getTeams = async () => {
+  const response = await API.get('/api/teams');
+  return response.data;
+};
+
 // Get game statistics
 export const getGameStats = async (filter = 'recent') => {
   try {

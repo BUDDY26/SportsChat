@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
+// Import the components that work
 import StatsPage from './StatsPage';
 import TeamsPage from './TeamsPage';
+import BettingPage from './BettingPage';
 import "./style.css";
 
 // Create placeholder components with auto-scroll and updating timestamps
@@ -20,12 +22,6 @@ const PlaceholderGlobalChat = ({ user }) => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  };
-
-  // Format timestamp function
-  const getFormattedTimestamp = () => {
-    const now = new Date();
-    return now.toLocaleTimeString();
   };
 
   // Auto-scroll when messages change
@@ -588,11 +584,11 @@ const DashboardPage = () => {
             </div>
           )}
           
-          {/* Placeholder for My Bets View */}
+          {/* Bets View */}
           {activeMenu === "bets" && (
-            <div className="main-content placeholder-content">
-              <h2>My Bets</h2>
-              <p>Your betting history will be displayed here.</p>
+            <div className="main-content betting-content">
+              <h2>Betting Center</h2>
+              <BettingPage user={user} />
             </div>
           )}
           
