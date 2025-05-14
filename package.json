@@ -2,13 +2,17 @@
   "name": "sportschat-root",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
-    "postinstall": "cd sportschat-frontend && npm install && npm run build",
+    "postinstall": "cd sportschat-backend && npm install && cd ../sportschat-frontend && npm install && npm run build",
+    "build": "cd sportschat-frontend && npm run build",
     "start": "node sportschat-backend/server.js"
   },
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.3.0"
+    "react-router-dom": "^6.14.2"
   }
 }
