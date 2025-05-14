@@ -21,8 +21,7 @@ const PORT = process.env.NODE_ENV === 'production'
   : 5000;
 
 
-// Configure MSSQL Database Connection
-
+// Configure Azure Database Connection 
 const dbConfig = {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
@@ -1142,6 +1141,11 @@ app.get('*', (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
+connectDB().then(() => {
+    app.listen(PORT, () => {
+        console.log(`✅ Server running on port ${PORT}`);
+    });
+}).catch(err => {
+    console.error('❌ Failed to connect to DB. Server not started.', err);
+    process.exit(1); // Exit so Azure knows it failed
+});
